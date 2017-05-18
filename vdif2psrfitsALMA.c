@@ -498,5 +498,5 @@ int main(int argc, char *argv[])
   
   printf("Wrote %d subints (%f sec) in %d files.\n",pf.tot_rows, pf.T, pf.filenum);
 
-  return;
+  return 0;
 }
