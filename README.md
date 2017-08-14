@@ -1,13 +1,4 @@
-#Start with config/, put cfitsio.m4 and a few other files in it
-
-#Create configure based on configure.ac, grap more files into config/
-
+#To compile
 ./bootstrap
-
-#Create Makefile based on Makefile.am
-
-./configure
-
-#Create output
-
+./configure --with-fftw3-lib-dir=YOUR_FFTW_LIB --with-fftw3-include-dir=YOUR_FFTW_HEAD
 make
