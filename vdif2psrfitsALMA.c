@@ -36,7 +36,6 @@ void usage(char *prg_name)
                      " -S   Name of the source (by default J0000+0000)\n"
 		             " -r   RA of the source\n"
 		             " -c   Dec of the source\n"
-		             " -d   Keep DC and Nyquist power after FFT (by default not)\n"
 		             " -D   Ouput data status (I for Stokes I, C for coherence product, X for pol0 I, Y for pol1 I, by default C)\n"
 		             " -O   Route of the output file(s).\n"
 		  " -h   Available options\n",
@@ -52,7 +51,7 @@ int main(int argc, char *argv[])
   struct psrfits pf;
   
   char vname[2][1024], oroute[1024], ut[30],mjd_str[25],vfhdr[2][VDIF_HEADER_BYTES],srcname[16],dstat,ra[64],dec[64];
-  int arg,j_i,j_j,j_O,n_f,mon[2],mon_nxt,i,j,k,p,nfps,fbytes,vd[2],nf_stat,ftot[2][2][VDIF_NCHAN],ct,tsf,bs,tet,nf_skip,dati,npol,dc;
+  int arg,j_i,j_j,j_O,n_f,mon[2],mon_nxt,i,j,k,p,nfps,fbytes,vd[2],nf_stat,ftot[2][2][VDIF_NCHAN],ct,tsf,bs,tet,nf_skip,dati,npol;
   float freq,s_stat,fmean[2][2][VDIF_NCHAN],dat,stot[2][2][VDIF_NCHAN],s_skip;
   double spf,mean[2],sq,rms[2];
   long double mjd;
@@ -71,7 +70,12 @@ int main(int argc, char *argv[])
   strcpy(srcname,"J0000+0000");
   dstat='C';
   npol=4;
-  dc=0;
+
+  if(argc==1)
+	{
+	  usage(argv[0]);
+	  exit(0);
+	}
   
   //Read arguments
   while ((arg=getopt(argc,argv,"hf:i:j:s:n:k:t:O:S:D:r:c:d")) != -1)
@@ -124,11 +128,7 @@ int main(int argc, char *argv[])
 		  strcpy(&dstat,optarg);
 		  if(dstat!='C') npol=1;
 		  break;
-		  
-		case 'd':
-		  dc=1;
-		  break;
-		  
+
 		case 'O':
 		  strcpy(oroute,optarg);
 		  j_O=1;
@@ -485,7 +485,7 @@ int main(int argc, char *argv[])
 				  fread(buffer[1],1,fbytes,vdif[1]);
 
 				  //Get detection
-				  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat,dc);
+				  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat);
 				  
 				}
 			  //Invalide frame

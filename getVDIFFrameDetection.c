@@ -23,7 +23,7 @@ void getDetection(float p0r, float p0i, float p1r, float p1i, float *det, char d
 }
 
 // Get coherence detection from real 2-bit, 32-channel frame of two pols
-void getVDIFFrameDetection_32chan(const unsigned char *src_p0, const unsigned char *src_p1, int fbytes, float det[][4],char dstat, int dc)
+void getVDIFFrameDetection_32chan(const unsigned char *src_p0, const unsigned char *src_p1, int fbytes, float det[][4],char dstat)
 {
   fftwf_complex *out_p0,*out_p1;
   fftwf_plan pl0,pl1;
@@ -86,25 +86,11 @@ void getVDIFFrameDetection_32chan(const unsigned char *src_p0, const unsigned ch
 		}
 	  fftwf_execute(pl0);
 	  fftwf_execute(pl1);
-
-	  if(dc == 0)
+	  for(i=0;i<Nts/2+1;i++)
 		{
-		  //Make detection for each FFT channel and sum up
-		  for(i=1;i<Nts/2;i++)
-			{
-			  getDetection(creal(out_p0[i]),cimag(out_p0[i]),creal(out_p1[i]),cimag(out_p1[i]),dets,dstat);
-			  for(j=0;j<npol;j++)
-				det[k][j]+=dets[j];
-			}
-		}
-	  else
-		{
-		  for(i=0;i<Nts/2+1;i++)
-			{
-			  getDetection(creal(out_p0[i]),cimag(out_p0[i]),creal(out_p1[i]),cimag(out_p1[i]),dets,dstat);
-			  for(j=0;j<npol;j++)
-				det[k][j]+=dets[j];
-			}
+		  getDetection(creal(out_p0[i]),cimag(out_p0[i]),creal(out_p1[i]),cimag(out_p1[i]),dets,dstat);
+		  for(j=0;j<npol;j++)
+			det[k][j]+=dets[j];
 		}
 	}
 
