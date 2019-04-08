@@ -12,7 +12,7 @@ A software tool to convert ALMA VLBI data in VDIF format into pulsar search mode
  * Run "make && make install".
 
 # Usage
- -f   Observing central frequency (MHz)
+-f   Observing central frequency (MHz)
  -i   Input vdif pol0
  -j   Input vdif pol1
  -n   Band sense (-1 for lower-side band, 1 for upper-side band)
