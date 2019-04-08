@@ -6,8 +6,8 @@ static void convert2to8(unsigned char *dest, const unsigned char *src, int bytes
    * as possible to best maintain amplitude scaling.  127.5 is the center of  
    * the scale (equates to 0).  118.5/35.5 is pretty close to optimal.
    */
-  const unsigned char levels[4] = {9, 92, 163, 246};
-  //const unsigned char levels[4] = {0, 1, 2, 3};
+  //const unsigned char levels[4] = {9, 92, 163, 246};
+  const unsigned char levels[4] = {0, 1, 2, 3};
   static int first = 1;
   static unsigned char lut2to8[256][4];   /* mapping from input 8 bits (4 samples) to output 4 8-bit samples */
   int i, o;

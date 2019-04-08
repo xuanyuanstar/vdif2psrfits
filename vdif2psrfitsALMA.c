@@ -27,13 +27,18 @@ void usage(char *prg_name)
 {
   fprintf(stdout,
 		             "%s [options]\n"
-		             " -f   Observing central frequency (MHz).\n"
-            		 " -i   Input vdif pol0.\n"
-		             " -j   Input vdif pol1.\n"
-		             " -n   Band sense (-1 for lower-side band, 1 for upper-side band).\n" 
-		             " -s   Seconds to get statistics to fill in invalid frames.\n"
-                     " -k   Seconds to skip from the beginning (default 0).\n"
-		             " -t   Time sample scrunch factor (by default 1). One time sample 8 microsecond.\n"
+		             " -f   Observing central frequency (MHz)\n"
+            		 " -i   Input vdif pol0\n"
+		             " -j   Input vdif pol1\n"
+		             " -n   Band sense (-1 for lower-side band, 1 for upper-side band)\n" 
+		             " -s   Seconds to get statistics to fill in invalid frames\n"
+                     " -k   Seconds to skip from the beginning (default 0)\n"
+		             " -t   Time sample scrunch factor (by default 1). One time sample 8 microsecond\n"
+                     " -S   Name of the source (by default J0000+0000)\n"
+		             " -r   RA of the source\n"
+		             " -c   Dec of the source\n"
+		             " -d   Keep DC and Nyquist power after FFT (by default not)\n"
+		             " -D   Ouput data status (I for Stokes I, C for coherence product, X for pol0 I, Y for pol1 I, by default C)\n"
 		             " -O   Route of the output file(s).\n"
 		  " -h   Available options\n",
 		  prg_name);
@@ -42,13 +47,13 @@ void usage(char *prg_name)
 
 int main(int argc, char *argv[])
 {
-  FILE *vdif[2],*out;
+  FILE *vdif[2],*out, *adat;
 
   const vdif_header *header[2];
   struct psrfits pf;
   
-  char vname[2][1024], oroute[1024], ut[30],mjd_str[25],vfhdr[2][VDIF_HEADER_BYTES];
-  int arg,j_i,j_j,j_O,n_f,mon[2],mon_nxt,i,j,k,nfps,fbytes,vd[2],nf_stat,ftot[2][2][VDIF_NCHAN],ct,tsf,bs,tet,nf_skip,dati;
+  char vname[2][1024], oroute[1024], ut[30],mjd_str[25],vfhdr[2][VDIF_HEADER_BYTES],srcname[16],dstat,ra[64],dec[64];
+  int arg,j_i,j_j,j_O,n_f,mon[2],mon_nxt,i,j,k,p,nfps,fbytes,vd[2],nf_stat,ftot[2][2][VDIF_NCHAN],ct,tsf,bs,tet,nf_skip,dati,npol,dc;
   float freq,s_stat,fmean[2][2][VDIF_NCHAN],dat,stot[2][2][VDIF_NCHAN],s_skip;
   double spf,mean[2],sq,rms[2];
   long double mjd;
@@ -64,9 +69,13 @@ int main(int argc, char *argv[])
   s_stat=0.0;
   tsf=1;
   s_skip=0.0;
+  strcpy(srcname,"J0000+0000");
+  dstat='C';
+  npol=4;
+  dc=0;
   
   //Read arguments
-  while ((arg=getopt(argc,argv,"hf:i:j:s:n:k:t:O:")) != -1)
+  while ((arg=getopt(argc,argv,"hf:i:j:s:n:k:t:O:S:D:r:c:d")) != -1)
 	{
 	  switch(arg)
 		{
@@ -98,6 +107,27 @@ int main(int argc, char *argv[])
 
 		case 'k':
 		  s_skip=atof(optarg);
+		  break;
+
+		case 'S':
+		  strcpy(srcname,optarg);
+		  break;
+
+		case 'r':
+		  strcpy(ra,optarg);
+		  break;
+
+		case 'c':
+		  strcpy(dec,optarg);
+		  break;
+		  
+		case 'D':
+		  strcpy(&dstat,optarg);
+		  if(dstat!='C') npol=1;
+		  break;
+		  
+		case 'd':
+		  dc=1;
 		  break;
 		  
 		case 'O':
@@ -149,6 +179,11 @@ int main(int argc, char *argv[])
   if(bs!=-1 && bs!=1)
 	{
 	  fprintf(stderr,"Not readable band sense.\n");
+	  exit(0);
+	}
+  if(dstat!='I' && dstat!='C' && dstat!='X' && dstat!='Y')
+	{
+	  fprintf(stderr,"Not recognized status for output data.\n");
 	  exit(0);
 	}
 
@@ -335,10 +370,16 @@ int main(int argc, char *argv[])
   strcpy(pf.hdr.telescope, "ALMA");
   strcpy(pf.hdr.obs_mode, "SEARCH");
   strcpy(pf.hdr.backend, "MARK6");
-  strcpy(pf.hdr.source, "J0835-4510");
+  strcpy(pf.hdr.source, srcname);
   strcpy(pf.hdr.date_obs, ut);
   strcpy(pf.hdr.poln_type, "LIN");
-  strcpy(pf.hdr.poln_order, "AABBCRCI");
+
+  //Specify status of output data
+  if(dstat=='C')
+	strcpy(pf.hdr.poln_order, "AABBCRCI");
+  else
+	strcpy(pf.hdr.poln_order, "AA+BB");
+
   strcpy(pf.hdr.track_mode, "TRACK");
   strcpy(pf.hdr.cal_mode, "OFF");
   strcpy(pf.hdr.feed_mode, "FA");
@@ -347,10 +388,12 @@ int main(int argc, char *argv[])
   pf.hdr.BW = VDIF_BW*bs;
   pf.hdr.nchan = VDIF_NCHAN;
   pf.hdr.MJD_epoch = mjd;
-  pf.hdr.ra2000 = 302.0876876;
-  dec2hms(pf.hdr.ra_str, pf.hdr.ra2000/15.0, 0);
-  pf.hdr.dec2000 = -3.456987698;
-  dec2hms(pf.hdr.dec_str, pf.hdr.dec2000, 1);
+  //pf.hdr.ra2000 = 302.0876876;
+  strcpy(pf.hdr.ra_str,ra);
+  //dec2hms(pf.hdr.ra_str, pf.hdr.ra2000/15.0, 0);
+  //pf.hdr.dec2000 = -3.456987698;
+  strcpy(pf.hdr.dec_str,dec);
+  //dec2hms(pf.hdr.dec_str, pf.hdr.dec2000, 1);
   pf.hdr.azimuth = 123.123;
   pf.hdr.zenith_ang = 23.0;
   pf.hdr.beam_FWHM = 0.25;
@@ -365,7 +408,7 @@ int main(int argc, char *argv[])
   pf.hdr.orig_nchan = pf.hdr.nchan;
   pf.hdr.orig_df = pf.hdr.df = pf.hdr.BW / pf.hdr.nchan;
   pf.hdr.nbits = 32;
-  pf.hdr.npol = 4;
+  pf.hdr.npol = npol;
   pf.hdr.chan_dm = 0.0;
   pf.hdr.fd_hand = 1;
   pf.hdr.fd_sang = 0;
@@ -412,6 +455,7 @@ int main(int argc, char *argv[])
   pf.sub.rawdata = (unsigned char *)malloc(pf.sub.bytes_per_subint);
 
   printf("Header prepared. Start to write data...\n");
+  adat=fopen("dat.txt","wt");
   
   // Main loop to write subints
   do
@@ -419,12 +463,11 @@ int main(int argc, char *argv[])
 	  // Fill time samples in each subint: pf.sub.rawdata
 	  for(i=0;i<pf.hdr.nsblk;i++)
 		{
+		  // Initialize
 		  for(k=0;k<VDIF_NCHAN;k++)
 			{
-			  sdet[k][0]=0.0;
-			  sdet[k][1]=0.0;
-			  sdet[k][2]=0.0;
-			  sdet[k][3]=0.0;
+			  for(p=0;p<npol;p++)
+				sdet[k][p]=0.0;
 			} 
 		  // Loop over frames
 		  for(k=0;k<tsf;k++)
@@ -443,7 +486,8 @@ int main(int argc, char *argv[])
 				  fread(buffer[1],1,fbytes,vdif[1]);
 
 				  //Get detection
-				  getVDIFFrameDetection_coherence_32chan(buffer[0],buffer[1],fbytes,det);
+				  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat,dc);
+				  
 				}
 			  //Invalide frame
 			  else
@@ -455,16 +499,14 @@ int main(int argc, char *argv[])
 				  fprintf(stderr,"Invalid frame detected. Use measured mean & rms to generate fake detection.\n");
 				  
 				  //Create fake detection with measured mean and rms
-				  getFakeDetection(mean,rms,VDIF_NCHAN,det,seed,fbytes);
+				  getVDIFFrameFakeDetection(mean,rms,VDIF_NCHAN,det,seed,fbytes,dstat);
 				}
 			  
 			  //Accumulate value
 			  for(j=0;j<VDIF_NCHAN;j++)
 				{
-				  sdet[j][0]+=det[j][0];
-				  sdet[j][1]+=det[j][1];
-				  sdet[j][2]+=det[j][2];
-				  sdet[j][3]+=det[j][3];
+				  for(p=0;p<npol;p++)
+					sdet[j][p]+=det[j][p];
 				}
 			  
 			  //Break at the end of vdif file
@@ -476,11 +518,18 @@ int main(int argc, char *argv[])
 		  //Write detections in pf.sub.rawdata, in 32-bit float and FPT order (freq, pol, time)
 		  for(j=0;j<VDIF_NCHAN;j++)
 			{
-			  //printf("%f %f %f %f\n",sdet[j][0],sdet[j][1],sdet[j][2],sdet[j][3]);
-			  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*j,&sdet[j][0],sizeof(float));
-			  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*VDIF_NCHAN+sizeof(float)*j,&sdet[j][1],sizeof(float));
-			  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*VDIF_NCHAN*2+sizeof(float)*j,&sdet[j][2],sizeof(float));
-			  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*VDIF_NCHAN*3+sizeof(float)*j,&sdet[j][3],sizeof(float));
+			  if(npol==4)
+				{
+				  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*j,&sdet[j][0],sizeof(float));
+				  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*VDIF_NCHAN*1+sizeof(float)*j,&sdet[j][1],sizeof(float));
+				  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*VDIF_NCHAN*2+sizeof(float)*j,&sdet[j][2],sizeof(float));
+				  memcpy(pf.sub.rawdata+i*sizeof(float)*4*VDIF_NCHAN+sizeof(float)*VDIF_NCHAN*3+sizeof(float)*j,&sdet[j][3],sizeof(float));
+				}
+			  else if(npol==1)
+				{
+				  memcpy(pf.sub.rawdata+i*sizeof(float)*1*VDIF_NCHAN+sizeof(float)*j,&sdet[j][0],sizeof(float));
+				  //if(j==0) fprintf(adat,"%f\n",sdet[j][0]);
+				}
 			}
 		}
 
@@ -507,6 +556,7 @@ int main(int argc, char *argv[])
   free(buffer[1]);
   fclose(vdif[0]);
   fclose(vdif[1]);
+  fclose(adat);
   
   printf("Wrote %d subints (%f sec) in %d files.\n",pf.tot_rows, pf.T, pf.filenum);
 
