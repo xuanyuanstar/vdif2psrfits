@@ -5,7 +5,6 @@
 
 
 #define VDIF_HEADER_BYTES       32
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -17,7 +16,7 @@
 #include "vdifio.h"
 #include "psrfits.h"
 #include "vdif2psrfits.h"
-#include "dec2hms.h"
+#include "cvrt2to8.c"
 
 static double VDIF_BW = 2000.0; //Total Bandwidth in MHz
 static int VDIF_BIT = 2;   //Bit per sample
@@ -254,8 +253,8 @@ int main(int argc, char *argv[])
 			  for(k=0;k<fbytes*4;k++)
 				{
 				  dati=(int)obuffer[j][k];
-				  mean[j]+=(double)dati;
-				  sq+=pow((double)dati,2.0);
+				  mean[j]+=(double)dati-mean_2to8;
+				  sq+=pow((double)dati-mean_2to8,2.0);
 				}
 
 			  //Add counter
