@@ -2,7 +2,7 @@
 // Arguments are output, input, number of bytes in input
 // Routine adopted from vdifio
 
-static void convert2to8(unsigned char *dest, const unsigned char *src, int bytes)
+static void convert2to8 (unsigned char *dest, const unsigned char *src, int bytes)
 {
   const unsigned char levels[4] = {0, 1, 2, 3};
   static int first = 1;
@@ -11,8 +11,7 @@ static void convert2to8(unsigned char *dest, const unsigned char *src, int bytes
 
   if(first)
 	{
-	  /* assemble look up table */
-
+	  // Assemble look up table
 	  for(i = 0; i < 256; ++i)
 		{
 		  int j;
