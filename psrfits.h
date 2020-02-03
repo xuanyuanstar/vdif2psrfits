@@ -4,7 +4,7 @@
 #include "fitsio.h"
 
 // The following is the max file length in GB, different for fold/search
-#define PSRFITS_MAXFILELEN_SEARCH 10L
+#define PSRFITS_MAXFILELEN_SEARCH 50L
 #define PSRFITS_MAXFILELEN_FOLD 10L
 
 // The following is the template file to use to create a PSRFITS file.
@@ -65,6 +65,7 @@ struct hdrinfo {
     int onlyI;              // 1 if the software will only record Stokes I
     int fd_hand;            // Receiver "handedness" or X/Y swap (+/-1)
     int be_phase;           // Backend poln cross-term phase convention (+/-1)
+    int ibeam;              // Beam ID number for multibeam systems. Normally beam 0 is the on-axis beam.
 };
 
 struct subint {
@@ -106,6 +107,7 @@ struct psrfits {
     long long N;            // Current number of spectra written
     double T;               // Current duration of the observation written
     int filenum;            // The current number of the file in the scan (1-offset)
+    int numfiles;           // The number of input files (if specified, 0 if basefilename)
     int rownum;             // The current subint number to be written (1-offset)
     int tot_rows;           // The total number of subints written so far
     int rows_per_file;      // The maximum number of rows (subints) per file
@@ -114,6 +116,7 @@ struct psrfits {
     int multifile;          // Write multiple output files
     int quiet;              // Be quiet about writing each subint
     char mode;              // Read (r) or write (w).
+    char **filenames;       // Array of the input file names
     struct hdrinfo hdr;
     struct subint sub;
     struct foldinfo fold;   
@@ -132,6 +135,8 @@ int psrfits_remove_polycos(struct psrfits *pf);
 int psrfits_remove_ephem(struct psrfits *pf);
 
 // In read_psrfits.c
+int is_search_PSRFITS(char *filename);
+void psrfits_set_files(struct psrfits *pf, int numfiles, char *filenames[]);
 int psrfits_open(struct psrfits *pf);
 int psrfits_read_subint(struct psrfits *pf);
 int psrfits_read_part_DATA(struct psrfits *pf, int N, int numunsigned, 

@@ -6,7 +6,7 @@ A software tool to convert ALMA VLBI data in VDIF format into pulsar search mode
 
 # Installation
  * Install cfitsio and fftw library. The code has been used with cfitsio3410 and fftw3.3.4.;
- * Modify "Makefile.am" to specify route to the source code;
+ * Modify "Makefile.am" to specify route to the source code (where it finds the PSRFITs header template);
  * In the "vdif2psrfits/" directory, run "./bootstrap";
  * Run "./configure". You may need to specify links to cfitsio and fftw library manually;
  * Run "make && make install".
