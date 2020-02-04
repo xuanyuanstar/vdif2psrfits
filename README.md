@@ -34,7 +34,7 @@ Patching power dip options:
   -p               Starting phase of data in scan+dip cycle (by default 0)
 
 Example of a command:
- * vdif2psrfitsALMA -f 86268.0 -i X.vdif -j Y.vdif -n -1 -O YOUR_PSRFITS/
+ * vdif2psrfitsALMA -f 86268.0 -i X.vdif -j Y.vdif -n -1 -s 5 -S SgrA -r 17:45:40 -c -29:00:28 -t 1 -O OUTPUT_ROUTE -D S
 
 # vdif2psrfitsPico
 # Deal with Pico & LMT VDIF output, 1 x 2 GHz channel
@@ -52,3 +52,6 @@ Example of a command:
   -n   Number of channels kept (Power of 2 up to 4096, by default 1)
   -O   Route of the output file 
   -h   Available options
+
+Example of a command:
+ * vdif2psrfitsPico -f 86268.0 -i X.vdif -j Y.vdif -t 4 -S SgrA* -r 00:00:00 -c -00:00:00.0 -D S -b -1 -n 8 -O /scratch/kliu/ -s 5.0
