@@ -3,6 +3,10 @@
 #include <malloc.h>
 #include <complex.h>
 #include <fftw3.h>
+#include "vdifio.h"
+
+// Mean of unsigned 2-bit samples
+static float mean2bspl = 1.5;
 
 void getDetection(float p0r, float p0i, float p1r, float p1i, float *det, char dstat)
 {
@@ -86,10 +90,10 @@ void getVDIFFrameDetection_32chan(const unsigned char *src_p0, const unsigned ch
 			{
 			  if(k<Nchan/2)
 				//in[j][i]=(float)((int)buff8[j][i*Nchan+15-k]);
-				in[j][i]=(float)((int)buff8[j][i*Nchan+15-k])-1.5;
+				in[j][i]=(float)((int)buff8[j][i*Nchan+15-k])-mean2bspl;
 			  else
 				//in[j][i]=(float)((int)buff8[j][i*Nchan+15+Nchan-k]);
-				in[j][i]=(float)((int)buff8[j][i*Nchan+15+Nchan-k])-1.5;
+				in[j][i]=(float)((int)buff8[j][i*Nchan+15+Nchan-k])-mean2bspl;
 			}
 		}
 
@@ -175,7 +179,7 @@ void getVDIFFrameFakeDetection_32chan(double mean_scan[][32], double rms_scan[][
 		{
 		  //Generate time series with given mean & rms
 		  for(i=0;i<Nts;i++)
-			in[j][i]=mean_scan[j][k]-1.5;
+			in[j][i]=mean_scan[j][k]-mean2bspl;
 		}
 
       // Make FFT plan and execute
@@ -254,8 +258,8 @@ void getVDIFFrameFakeDetection_1chan(double *mean, double *rms, int Nchan, float
     {
       // Generate time series with given mean & rms
       for(i=0;i<Nts;i++)
-	//in[j][i]=mean[j]+gasdev(seed)*rms[j]-1.5;
-	in[j][i]=mean[j]-1.5;
+	//in[j][i]=mean[j]+gasdev(seed)*rms[j]-mean2bspl;
+	in[j][i]=mean[j]-mean2bspl;
     }
 
   // Perform FFT
@@ -286,16 +290,16 @@ void getVDIFFrameFakeDetection_1chan(double *mean, double *rms, int Nchan, float
   fftwf_destroy_plan(pl1);
 }
 
-void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned char *src_p1, int fbytes, float det[][4], int nchan, char dstat)
+void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned char *src_p1, int fbytes, float det[][4], int nchan, char dstat, float *in_p0, float *in_p1, fftwf_complex *out_p0, fftwf_complex *out_p1, fftwf_plan pl0, fftwf_plan pl1)
 {
-  fftwf_complex *out_p0,*out_p1;
-  fftwf_plan pl0,pl1;
-  float **in,dets[4];
+  //fftwf_complex *out_p0,*out_p1;
+  //fftwf_plan pl0,pl1;
+  float dets[4];
   int i,j,k,Nts,chw;
   unsigned char *buff8[2];
   
   for(i=0;i<2;i++)
-	buff8[i]=malloc(sizeof(unsigned char)*fbytes*4);
+    buff8[i]=malloc(sizeof(unsigned char)*fbytes*4);
 
   //Extend from 2-bit to 8-bit
   convert2to8(buff8[0], src_p0, fbytes);
@@ -308,32 +312,39 @@ void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned cha
   chw=Nts/2/nchan;
   
   //Memo for FFT for two pols
-  in = (float **)malloc(sizeof(float *)*2);
-  for(i=0;i<2;i++)
-	in[i]= (float *) fftwf_malloc(sizeof(float)*Nts);
-  out_p0 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
-  out_p1 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
+  //in = (float **)malloc(sizeof(float *)*2);
+  //for(i=0;i<2;i++)
+  //  in[i]= (float *) malloc(sizeof(float)*Nts);
+  //out_p0_ful = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
+  //out_p1_ful = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
   
-  //Initialize
+  // Initialize detection arrays
   for(j=0;j<4;j++)
 	dets[j]=0.0;
   for(j=0;j<nchan;j++)
 	for(k=0;k<4;k++)
 	  det[j][k]=0.0;
 
-  //For each pol
-  for(j=0;j<2;j++)
-	{
-	  //Read time series
-	  for(i=0;i<Nts;i++)
-		in[j][i]=(float)((int)buff8[j][i])-1.5;
-	}
+  // Initialize time series
+  //for(j=0;j<2;j++)
+  //{
+      // Read time series
+  //  for(i=0;i<Nts;i++)
+  //	in[j][i]=(float)((int)buff8[j][i])-mean2bspl;
+  //}
 
   //Perform FFT
-  pl0 = fftwf_plan_dft_r2c_1d(Nts, in[0], out_p0, FFTW_ESTIMATE);
-  pl1 = fftwf_plan_dft_r2c_1d(Nts, in[1], out_p1, FFTW_ESTIMATE);
-  fftwf_execute(pl0);
-  fftwf_execute(pl1);
+  //pl0 = fftwf_plan_dft_r2c_1d(Nts, in[0], out_p0, FFTW_ESTIMATE);
+  //pl1 = fftwf_plan_dft_r2c_1d(Nts, in[1], out_p1, FFTW_ESTIMATE);
+
+      for(i=0;i<Nts;i++)
+	{
+	  in_p0[i] = (float)((int)buff8[0][i])-mean2bspl;
+	  in_p1[i] = (float)((int)buff8[1][i])-mean2bspl;
+	}
+
+      fftwf_execute(pl0);
+      fftwf_execute(pl1);
 
   //Make detection for each FFT channel and sum up to given nchan
   for(i=1;i<=Nts/2;i++)
@@ -352,10 +363,11 @@ void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned cha
   for(i=0;i<2;i++)
 	{
 	  free(buff8[i]);
-	  free(in[i]);
+	  //free(in[i]);
 	}
-  fftwf_free(out_p0);
-  fftwf_free(out_p1);
-  fftwf_destroy_plan(pl0);
-  fftwf_destroy_plan(pl1);
+  //fftwf_free(out_p0);
+  //fftwf_free(out_p1);
+  //fftwf_destroy_plan(pl0);
+  //fftwf_destroy_plan(pl1);
 }
+
