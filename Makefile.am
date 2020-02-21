@@ -13,4 +13,4 @@ vdif2psrfitsALMA_LDADD = libVDIF.la @CFITSIO_LIBS@ @FFTW_LIBS@ -lfftw3f_threads
 vdif2psrfitsPico_SOURCES = vdif2psrfitsPico.c
 vdif2psrfitsPico_LDADD = libVDIF.la @CFITSIO_LIBS@ @FFTW_LIBS@ -lfftw3f_threads
 
-AM_CPPFLAGS = -DPSRFITS_TEMPLATE_DIR='"/cluster/pulsar/kliu/Soft/vdif2psrfits/"'
+AM_CPPFLAGS = -DPSRFITS_TEMPLATE_DIR='"/home/kliu/Soft/vdif2psrfits/"'

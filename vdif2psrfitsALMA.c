@@ -10,15 +10,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <math.h>
-#include <strings.h>
 #include <string.h>
-#include <assert.h>
 #include <time.h>
+#include <malloc.h>
 #include "vdifio.h"
 #include "psrfits.h"
 #include "vdif2psrfits.h"
 #include "dec2hms.h"
-#include "ran.c"
+#include <fftw3.h>
+#include <stdbool.h>
+
 
 static double VDIF_BW = 2000.0; //Total Bandwidth in MHz
 static int VDIF_BIT = 2;   //Bit per sample
@@ -39,10 +40,12 @@ void usage(char *prg_name)
 	          "  -r      RA of the source (AA:BB:CC.DD)\n"
                   "  -c      Dec of the source (+AA:BB:CC.DD)\n"
 		  "  -D      Ouput data status (I for Stokes I, C for coherence product, X for pol0 I, Y for pol1 I, S for Stokes, P for polarised signal, S for stokes, by default C)\n"
+	          "  -d      Number of thread to use in FFT (by default 1)\n"
+	          "  -v      Verbose\n"
 		  "  -O      Route of the output file(s).\n"
 		  "  -h      Available options\n"
 		  "\n"
-		  "Patching power dip options:\n"
+		  "Patching power dip (for active phasing) options:\n"
 		  "  -P               Replace power dip raw samples with random noise \n"
 		  "  -M               Replace power dip detections with mean \n"
 		  "  -p               Starting phase of data in scan+dip cycle (by default 0)\n",
@@ -50,39 +53,69 @@ void usage(char *prg_name)
   exit(0);
 }
 
+// get offset VDIF frame from beginning
+int64_t getVDIFFrameOffset(const vdif_header *headerst, const vdif_header *header, uint32_t fps)
+{
+  uint32_t day[2],sec[2],num[2];
+  int64_t offset;
+
+  // Get epoch      
+  day[0]=getVDIFFrameMJD(headerst);
+  day[1]=getVDIFFrameMJD(header);
+
+  // Get second after epoch
+  sec[0]=getVDIFFrameSecond(headerst);
+  sec[1]=getVDIFFrameSecond(header);
+
+  // Get number of frame after second
+  num[0]=getVDIFFrameNumber(headerst);
+  num[1]=getVDIFFrameNumber(header);
+
+  offset=(day[1]-day[0])*86400*fps+(sec[1]-sec[0])*fps+(num[1]-num[0]);
+
+  return offset;
+}
+
+
 int main(int argc, char *argv[])
 {
   FILE *vdif[2],*out;
-
-  const vdif_header *header[2];
+  bool pval[2], ifverbose, ifpol[2], ifout;
   struct psrfits pf;
   
-  char vname[2][1024], oroute[1024], ut[30],mjd_str[25],vfhdr[2][VDIF_HEADER_BYTES],srcname[16],dstat,ra[64],dec[64];
-  int arg,j_i,j_j,j_O,n_f,mon[2],mon_nxt,i,j,k,p,nfps,fbytes,fnum,vd[2],nf_stat,ftot[2][2][VDIF_NCHAN],ct,tsf,bs,tet,nf_skip,dati,npol,pch,mean_sampl,sk,ftotct;
-  float freq,s_stat,dat,s_skip;
-  double spf,pha_start,len_scan,len_dip,mean_det[VDIF_NCHAN][4],acc_det[VDIF_NCHAN][4],rms_det[VDIF_NCHAN][4],accsq_det[VDIF_NCHAN][4];
-  long double mjd;
-  long int idx[2],sec[2],num[2],seed,iseed,pha_start_nf,len_scan_nf,len_dip_nf,pha_ct,fct;
-  unsigned char *buffer[2], *obuffer[2];
+  char vname[2][1024], oroute[1024], ut[30],mjd_str[25],vfhdr[2][VDIF_HEADER_BYTES],vfhdrst[VDIF_HEADER_BYTES],srcname[16],dstat,ra[64],dec[64];
+  int arg,j_i,j_j,j_O,n_f,i,j,k,p,nfps,fbytes,fnum,vd[2],nf_stat,ftot[2][2][VDIF_NCHAN],ct,tsf,bs,tet,nf_skip,dati,npol,pch,mean_sampl,sk,nthd,nread[2];
+  float freq,s_stat,dat,s_skip,*in_p0, *in_p1;
+  double spf,pha_start,len_scan,len_dip,mean_det[VDIF_NCHAN][4],acc_det[VDIF_NCHAN][4],rms_det[VDIF_NCHAN][4],accsq_det[VDIF_NCHAN][4], mjd[2];
+  long int idx[2],seed,iseed,pha_start_nf,len_scan_nf,len_dip_nf,pha_ct,fct,hunksize,Nfm,ctframe[2],nfm_p[2],chunksize,Nts;
+  unsigned char *buffer[2], *obuffer[2],*chunk[2];
   float det[VDIF_NCHAN][4],sdet[VDIF_NCHAN][4];
   time_t t;
+  fftwf_complex *out_p0,*out_p1;
+  fftwf_plan pl0,pl1;
+  int64_t offset_pre[2],offset[2];
+  uint32_t fps,inval;
   
   freq=0.0;
-  j_i=0;
-  j_j=0;
-  j_O=0;
   s_stat=0.0;
   tsf=1;
   s_skip=0.0;
-  strcpy(srcname,"J0000+0000");
+  strcpy(srcname,"J0835-4510");
   dstat='C';
   npol=4;
+  chunksize=1000000000;
+  nthd=1;
+  inval=0;
+  ifverbose = false;
+  ifout = false;
+  for(i=0;i<2;i++)
+    ifpol[i] = false;
+
   pch=0;
   pha_start=0.0;
   len_scan=16.128;
   len_dip=2.064;
   mean_sampl=0;
-  ftotct=0;
 
   if(argc==1)
     {
@@ -101,12 +134,12 @@ int main(int argc, char *argv[])
 		  
 		case 'i':
 		  strcpy(vname[0],optarg);
-		  j_i=1;
+		  ifpol[0]=true;
 		  break;
 
 		case 'j':
 		  strcpy(vname[1],optarg);
-		  j_j=1;
+		  ifpol[1]=true;
 		  break;
 
 		case 's':
@@ -159,9 +192,13 @@ int main(int argc, char *argv[])
 		  pha_start=atof(optarg);
 		  break;
 		  
+		case 'd':
+		  nthd=atoi(optarg);
+		  break;
+
 		case 'O':
 		  strcpy(oroute,optarg);
-		  j_O=1;
+		  ifout=true;
 		  break;
 
 		case 'h':
@@ -180,12 +217,12 @@ int main(int argc, char *argv[])
 	  fprintf(stderr,"Missing info of observing central frequency.\n");
 	  exit(0);
 	}
-  if(j_i==0)
+  if(ifpol[0] == false)
 	{
 	  fprintf(stderr,"No input file provided for pol0.\n");
 	  exit(0);
 	}
-  if(j_j==0)
+  if(ifpol[1] == false)
 	{
 	  fprintf(stderr,"No input file provided for pol1.\n");
 	  exit(0);
@@ -195,7 +232,7 @@ int main(int argc, char *argv[])
 	  fprintf(stderr,"Invalid sample scrunching factor.\n");
 	  exit(0);
 	}  
-  if(j_O==0)
+  if(ifout == false)
 	{
 	  fprintf(stderr,"No output route specified.\n");
 	  exit(0);
@@ -220,23 +257,44 @@ int main(int argc, char *argv[])
   vdif[0]=fopen(vname[0],"rb");
   fread(vfhdr[0],1,VDIF_HEADER_BYTES,vdif[0]);
   fclose(vdif[0]);
-  header[0]=(const vdif_header *)vfhdr[0];
-  
+   
   // Get header info
   /*-----------------------*/
   // Get frame bytes
-  fbytes=getVDIFFrameBytes(header[0])-VDIF_HEADER_BYTES;
+  fbytes=getVDIFFrameBytes((const vdif_header *)vfhdr[0])-VDIF_HEADER_BYTES;
 
   // Calculate time interval (in unit of microsecond) of a frame
   spf=(double)fbytes/VDIF_BIT*8/(VDIF_BW*2);
+
+  //Frame per second
+  fps=1000000*VDIF_BIT/8*2*VDIF_BW/fbytes;
   
   // Calculate how many frames to get statistics
   nf_stat=s_stat*1.0e6/spf;
+
+  //Calculate number of frames in one read chunk
+  Nfm=chunksize/(fbytes+VDIF_HEADER_BYTES);
+  printf("Number of frame per reading chunk: %ld\n",Nfm);
 
   // Calculate how many frames to skip from the beginning
   nf_skip=s_skip*1.0e6/spf;
   printf("Number of frames to skip from the beginning: %i.\n",nf_skip);
     
+  // Prepare FFT
+  Nts = fbytes*4/VDIF_NCHAN;
+  in_p0 = (float *) malloc(sizeof(float)*Nts);
+  in_p1 = (float *) malloc(sizeof(float)*Nts);
+  out_p0 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
+  out_p1 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
+  printf("Determining FFT plan...length %d...",Nts);
+  if(nthd > 1) {
+    i=fftwf_init_threads();
+    if(!i) {
+      fprintf(stderr,"Error in initializing threads.\n");
+      exit(0);
+    }
+    fftwf_plan_with_nthreads(nthd);
+  }
   // Allocate memo for frames
   for(j=0;j<2;j++)
 	{
@@ -258,26 +316,23 @@ int main(int argc, char *argv[])
 	  vdif[j]=fopen(vname[j],"rb");
 
 	  // Skip the first given length of data
-	  for(i=0;i<nf_skip;i++)
-		fseek(vdif[j],VDIF_HEADER_BYTES+fbytes,SEEK_CUR);
+	  fseek(vdif[j],(VDIF_HEADER_BYTES+fbytes)*nf_skip,SEEK_CUR);
 	}
   for(i=0;i<nf_stat;i++)
-	{
+    {
 	  // Read header
 	  fread(vfhdr[0],1,VDIF_HEADER_BYTES,vdif[0]);
 	  fread(vfhdr[1],1,VDIF_HEADER_BYTES,vdif[1]);
-	  header[0]=(const vdif_header *)vfhdr[0];
-	  header[1]=(const vdif_header *)vfhdr[1];
 		  
-	  // Valid frame
-	  if(!getVDIFFrameInvalid(header[0]) && !getVDIFFrameInvalid(header[1]))
+	  // Valid frame for both pols
+	  if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) && !getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
 		{
 		  // Read data in frame
 		  fread(buffer[0],1,fbytes,vdif[0]);
 		  fread(buffer[1],1,fbytes,vdif[1]);
 		  
 		  // Accumulate values for detection mean
-		  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat);
+		  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat,in_p0,in_p1,out_p0,out_p1,pl0,pl1);
 		  for(j=0;j<VDIF_NCHAN;j++)
 			for(p=0;p<4;p++)
 			  {
@@ -302,7 +357,8 @@ int main(int argc, char *argv[])
 	  {
 		mean_det[j][p]=acc_det[j][p]/(double)fct;
 		rms_det[j][p]=sqrt(accsq_det[j][p]/fct-pow(mean_det[j][p],2.0));
-		fprintf(stderr,"Mean & rms det chan%i, pol%i: %lf %lf\n",j,p,mean_det[j][p],rms_det[j][p]);
+		if(ifverbose)
+		  fprintf(stderr,"Mean & rms det chan%i, pol%i: %lf %lf\n",j,p,mean_det[j][p],rms_det[j][p]);
 	  }
   
   // Open VDIF files and skip the first given length of data
@@ -310,92 +366,57 @@ int main(int argc, char *argv[])
 	{
 	  vdif[j]=fopen(vname[j],"rb");
 	  for(i=0;i<nf_skip;i++)
-		fseek(vdif[j],VDIF_HEADER_BYTES+fbytes,SEEK_CUR);
+	    fseek(vdif[j],VDIF_HEADER_BYTES+fbytes,SEEK_CUR);
 	}
   
   // Calibrate the difference in starting time between the two pols
   printf("Calibrating potential difference in starting time between two pols...\n");
+
+  // Move to the first valid frame for both pols
   for(j=0;j<2;j++)
-	{
-	  fread(vfhdr[j],1,VDIF_HEADER_BYTES,vdif[j]);
-	  header[j]=(const vdif_header *)vfhdr[j];
-	  
-	  // Get epoch in unit of 6-month period
-	  mon[j]=getVDIFFrameMJD(header[j]);
+    {
+      // Move to the first valid frame and get header info
+      do {
+	// Get header
+	fread(vfhdr[j],1,VDIF_HEADER_BYTES,vdif[j]);
 
-	  // Get second after epoch
-	  sec[j]=getVDIFFrameSecond(header[j]);
+	// Valid frame
+	if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[j]))
+	  {
+	    mjd[j]=getVDIFFrameDMJD((const vdif_header *)vfhdr[j], fps);
+	    break;
+	  }
+	// Invalid frame
+	else
+	  fseek(vdif[j],fbytes,SEEK_CUR);
+      }while(feof(vdif[j])!=1);
+    }
 
-	  // Get number of frame after second
-	  num[j]=getVDIFFrameNumber(header[j]);
-	}  
-  while(mon[0]!=mon[1])
-	{
-	  printf("Mon not same %i %i\n",mon[0],mon[1]);
-	  if(mon[0]<mon[1])
-		{
-		  fseek(vdif[0],fbytes,SEEK_CUR);
-		  fread(vfhdr[0],1,VDIF_HEADER_BYTES,vdif[0]);
-		  header[0]=(const vdif_header *)vfhdr[0];
-		  mon[0]=getVDIFFrameMJD(header[0]);
-		  sec[0]=getVDIFFrameSecond(header[0]);
-		}
-	  else
-		{
-		  fseek(vdif[1],fbytes,SEEK_CUR);
-		  fread(vfhdr[1],1,VDIF_HEADER_BYTES,vdif[1]);
-		  header[1]=(const vdif_header *)vfhdr[1];
-		  mon[1]=getVDIFFrameMJD(header[1]);
-		  sec[1]=getVDIFFrameSecond(header[1]);
-		}
-	}
-  while(sec[0]!=sec[1])
-	{
-	  printf("sec not same\n");
-	  if(sec[0]<sec[1])
-		{
-		  fseek(vdif[0],fbytes,SEEK_CUR);
-		  fread(vfhdr[0],1,VDIF_HEADER_BYTES,vdif[0]);
-		  header[0]=(const vdif_header *)vfhdr[0];
-		  sec[0]=getVDIFFrameSecond(header[0]);
-		  num[0]=getVDIFFrameNumber(header[0]);
-		}
-	  else
-		{
-		  fseek(vdif[1],fbytes,SEEK_CUR);
-		  fread(vfhdr[1],1,VDIF_HEADER_BYTES,vdif[1]);
-		  header[1]=(const vdif_header *)vfhdr[1];
-		  sec[1]=getVDIFFrameSecond(header[1]);
-		  num[1]=getVDIFFrameNumber(header[1]);
-		}
-	}
-  while(num[0]!=num[1])
-	{
-	  printf("num not same\n");
-	  if(num[0]<num[1])
-		{
-		  fseek(vdif[0],fbytes,SEEK_CUR);
-		  fread(vfhdr[0],1,VDIF_HEADER_BYTES,vdif[0]);
-		  header[0]=(const vdif_header *)vfhdr[0];
-		  num[0]=getVDIFFrameNumber(header[0]);
-		}
-	  else
-		{
-		  fseek(vdif[1],fbytes,SEEK_CUR);
-		  fread(vfhdr[1],1,VDIF_HEADER_BYTES,vdif[1]);
-		  header[1]=(const vdif_header *)vfhdr[1];
-		  num[1]=getVDIFFrameNumber(header[1]);
-		}
-	}
+  // Synchronize starting time
+  while(mjd[0]!=mjd[1] || getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) || getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
+    {
+      if(mjd[0]<mjd[1])
+	j=0;
+      else
+	j=1;
+
+      fseek(vdif[j],fbytes,SEEK_CUR);
+      fread(vfhdr[j],1,VDIF_HEADER_BYTES,vdif[j]);
+      mjd[j]=getVDIFFrameDMJD((const vdif_header *)vfhdr[j], fps);
+    }
+
+  //Get starting MJD and UT
+  memcpy(vfhdrst,vfhdr[0],VDIF_HEADER_BYTES);
+  mjd2date(mjd[0],ut);
+  printf("Starting time synchronized. Start UT of VDIF: %s\n",ut);
+
+  // Set starting position for reading
   for(j=0;j<2;j++)
-	fseek(vdif[j],-VDIF_HEADER_BYTES,SEEK_CUR);
-  printf("Starting time synchronized. MJD: %i; Second: %i; Number: %i.\n",mon[0],sec[0],num[0]);
+    {
+      fseek(vdif[j],-VDIF_HEADER_BYTES,SEEK_CUR);
+      offset_pre[j]=-1;
+    }
 
-  // Get starting MJD and UT
-  mjd=(long double)mon[0]+(long double)sec[0]/86400.0+(long double)spf*num[0]/86400.0*1.0e-6;
-  mjd2date(mjd,ut);
-  printf("start UT of VDIF: %s\n",ut);
-  
   // Set psrfits main header
   printf("Setting up PSRFITS output...\n");
   pf.filenum = 0;           // This is the crucial one to set to initialize things
@@ -427,7 +448,7 @@ int main(int argc, char *argv[])
   pf.hdr.fctr = freq;
   pf.hdr.BW = VDIF_BW*bs;
   pf.hdr.nchan = VDIF_NCHAN;
-  pf.hdr.MJD_epoch = mjd;
+  pf.hdr.MJD_epoch = mjd[0];
   strcpy(pf.hdr.ra_str,ra);
   strcpy(pf.hdr.dec_str,dec);
   pf.hdr.azimuth = 123.123;
@@ -451,7 +472,7 @@ int main(int argc, char *argv[])
   pf.hdr.fd_sang = 0;
   pf.hdr.fd_xyph = 0;
   pf.hdr.be_phase = 1;
-  pf.hdr.nsblk = 8192;
+  pf.hdr.nsblk = 12500;
   pf.hdr.ds_time_fact = 1;
   pf.hdr.ds_freq_fact = 1;
   sprintf(pf.basefilename, "%s/%s",oroute,ut);
@@ -460,7 +481,7 @@ int main(int argc, char *argv[])
   
   // Set values for our subint structure
   pf.sub.tsubint = pf.hdr.nsblk * pf.hdr.dt;
-  pf.tot_rows = 0.0;
+  pf.tot_rows = 0;
   pf.sub.offs = (pf.tot_rows + 0.5) * pf.sub.tsubint;
   pf.sub.lst = pf.hdr.start_lst;
   pf.sub.ra = pf.hdr.ra2000;
@@ -506,9 +527,21 @@ int main(int argc, char *argv[])
   
   fprintf(stderr,"Header prepared. Start to write data...\n");
 
+  // First read of data chunk
+  for(i=0;i<2;i++)
+    {
+      chunk[i] = (unsigned char *)malloc(Nfm * (fbytes+VDIF_HEADER_BYTES));
+      nread[i] = fread(chunk[i],1,Nfm * (fbytes+VDIF_HEADER_BYTES),vdif[i]);
+      ctframe[i] = 0;
+      nfm_p[i] = Nfm;
+    }
+
   // Main loop to write subints
   do
 	{
+
+	  memset(pf.sub.rawdata,0,sizeof(unsigned char)*pf.sub.bytes_per_subint);
+
 	  // Fill time samples in each subint: pf.sub.rawdata
 	  for(i=0;i<pf.hdr.nsblk;i++)
 		{
@@ -516,110 +549,138 @@ int main(int argc, char *argv[])
 		  for(k=0;k<VDIF_NCHAN;k++)
 			{
 			  for(p=0;p<npol;p++)
-				sdet[k][p]=0.0;
+			    sdet[k][p]=0.0;
 			} 
 		  // Loop over frames
 		  for(k=0;k<tsf;k++)
 			{
-			  // Read frame header
-			  fread(vfhdr[0],1,VDIF_HEADER_BYTES,vdif[0]);
-			  fread(vfhdr[1],1,VDIF_HEADER_BYTES,vdif[1]);
-			  header[0]=(const vdif_header *)vfhdr[0];
-			  header[1]=(const vdif_header *)vfhdr[1];
-			  ftotct++;
-			  
-			  // Check if a proper frame
-			  fbytes=getVDIFFrameBytes(header[0])-VDIF_HEADER_BYTES;
-			  num[0]=getVDIFFrameNumber(header[0]);
-			  num[1]=getVDIFFrameNumber(header[1]);
-			  if(fbytes < 32 || fbytes > 144512) {
-				printf("False number of framesize in pol0 at frame %i.\n",ftotct);
-				exit(0);
-			  }
-			  fbytes=getVDIFFrameBytes(header[1])-VDIF_HEADER_BYTES;
-			  if(fbytes < 32 || fbytes > 144512) {
-				printf("False number of framesize in pol1 at frame %i.\n",ftotct);
-				exit(0);
-			  }
-			  if(num[0] != num[1]) printf("Warning: frame number start to deviate.\n");
-			  
-			  // Valid frame
-			  if(!getVDIFFrameInvalid(header[0]) && !getVDIFFrameInvalid(header[1]))
-				{
-				  // Read data in frame
-				  fread(buffer[0],1,fbytes,vdif[0]);
-				  fread(buffer[1],1,fbytes,vdif[1]);
+			  // Consecutive check on both pols
+			  for(j=0;j<2;j++)
+			    {
+			      // Read frame header
+			      memcpy(vfhdr[j],chunk[j]+ctframe[j]*(fbytes+VDIF_HEADER_BYTES),VDIF_HEADER_BYTES);
+			      pval[j] = true;
 
-				  // Get detection
-				  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat);
+			      // Get frame offset
+			      offset[j]=getVDIFFrameOffset((const vdif_header *)vfhdrst, (const vdif_header *)vfhdr[j], fps);
+
+			      // Gap from the last frames
+			      if(offset[j] > offset_pre[j]+1)
+				{
+				  pval[j] = false;
+				  fseek(vdif[j],-VDIF_HEADER_BYTES,SEEK_CUR);
+				  offset_pre[j]++;
+				}
+			      // Consecutive
+			      else
+				{
+				  // Get data
+				  memcpy(buffer[j],chunk[j]+ctframe[j]*(fbytes+VDIF_HEADER_BYTES)+VDIF_HEADER_BYTES,fbytes);
+				  offset_pre[j]=offset[j];
+				  ctframe[j]++;
+
+				  // If end of buffer 
+				  if(ctframe[j] == nfm_p[j])
+				    {
+				      // Last read was complete, try to read more
+				      if(nfm_p[j] == Nfm)
+					{
+					  nread[j]=fread(chunk[j],1,Nfm * (fbytes+VDIF_HEADER_BYTES),vdif[j]);
+					  ctframe[j]=0;
+					        
+					  // Running into the last chunk of data, update frame number
+					  if(nread[j] != sizeof(unsigned char) * Nfm * (fbytes+VDIF_HEADER_BYTES))
+					    nfm_p[j] = nread[j] / (fbytes+VDIF_HEADER_BYTES);
+					}
+				    }
+				}
+			    }
+
+			  // Both pol consecutive
+			  if(pval[0] == true && pval[1] == true) 
+			    {
+			      // Valid frame
+			      if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) && !getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
+				{
+				  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat,in_p0,in_p1,out_p0,out_p1,pl0,pl1);
 
 				  // Subscan phase
 				  if(pha_ct < len_scan_nf)
-					{				  
-					  // Accumulate values for detection mean
-					  for(j=0;j<VDIF_NCHAN;j++)
-						for(p=0;p<4;p++)
-						  {
-							acc_det[j][p]+=(double)det[j][p];
-							accsq_det[j][p]+=pow((double)det[j][p],2.0);
-						  }
-					  fct++;
-					}
-				  else // Dip phase
-					{
-					  // Update patching param, when entering dip phase
-					  if(pha_ct == len_scan_nf)
-						{
-						  // Update detection mean
-						  for(j=0;j<VDIF_NCHAN;j++)
-							for(p=0;p<4;p++)
-							  {
-								// In case no values in the past cycle
-								if(acc_det[j][p]!=0.0)
-								  {
-									mean_det[j][p]=acc_det[j][p]/(double)fct;
-									rms_det[j][p]=sqrt(accsq_det[j][p]/(double)fct-pow(mean_det[j][p],2.0));
-								  }
-								acc_det[j][p]=0.0;
-								accsq_det[j][p]=0.0;
-							  }
-						  fct=0;
-						}
-                      // Patch detection with mean+rms
-					  if(pch == 1)
-						{
-						  for(j=0;j<VDIF_NCHAN;j++)
-							for(p=0;p<4;p++)
-							  det[j][p]=mean_det[j][p]+rms_det[j][p]*gasdev(&seed);
-						}
-					  else if(pch == 2)
-						{
-						  // Patch fake detection from mean
-						  for(j=0;j<VDIF_NCHAN;j++)
-							for(p=0;p<4;p++)
-							  det[j][p]=mean_det[j][p];
-						}
-					}
-				}
-			  else // Invalid frame	  
-				{
-				  // Fake detection from mean
-				  fprintf(stderr,"Invalid frame detected. Use measured mean to generate fake detection.\n");
-				  for(j=0;j<VDIF_NCHAN;j++)
+				    {
+				      // Accumulate values for detection (running) mean
+				      for(j=0;j<VDIF_NCHAN;j++)
 					for(p=0;p<4;p++)
-					  det[j][p]=mean_det[j][p];
-
-				  // Skip the data
-				  fseek(vdif[0],fbytes,SEEK_CUR);
-				  fseek(vdif[1],fbytes,SEEK_CUR);
+					  {
+					    acc_det[j][p]+=(double)det[j][p];
+					    accsq_det[j][p]+=pow((double)det[j][p],2.0);
+					  }
+				      fct++;
+				    }
+				  else // Dip phase
+				    {
+				      // Update patching param, when entering dip phase
+				      if(pha_ct == len_scan_nf)
+					{
+					  // Update detection mean
+					  for(j=0;j<VDIF_NCHAN;j++)
+					    for(p=0;p<4;p++)
+					      {
+						// In case no values in the past cycle
+						if(acc_det[j][p]!=0.0)
+						  {
+						    mean_det[j][p]=acc_det[j][p]/(double)fct;
+						    rms_det[j][p]=sqrt(accsq_det[j][p]/(double)fct-pow(mean_det[j][p],2.0));
+						  }
+						acc_det[j][p]=0.0;
+						accsq_det[j][p]=0.0;
+					      }
+					  fct=0;
+					}
+				      // Patch detection with mean+rms
+				      if(pch == 1)
+					{
+					  for(j=0;j<VDIF_NCHAN;j++)
+					    for(p=0;p<4;p++)
+					      det[j][p]=mean_det[j][p]+rms_det[j][p]*gasdev(&seed);
+					}
+				      else if(pch == 2)
+					{
+					    // Patch fake detection from mean
+					  for(j=0;j<VDIF_NCHAN;j++)
+					    for(p=0;p<4;p++)
+					      det[j][p]=mean_det[j][p];
+					}
+				    }
 				}
+			      else // Invalid frame 
+				{
+				  // Create fake detection with measured mean
+				  if(ifverbose)
+				    fprintf(stderr,"Invalid frame detected in file %d subint %d (%f sec). Fake detection with measured mean.\n", pf.filenum, pf.tot_rows, pf.T);
+				  for(j=0;j<VDIF_NCHAN;j++)
+				    for(p=0;p<4;p++)
+				      det[j][p]=mean_det[j][p];
+				  inval++;
+				}
+			    }
+			  // One pol not consecutive
+			  else 
+			    {
+			      // Create fake detection with measured mean
+			      if(ifverbose)
+				fprintf(stderr,"Gap in frame count detected in file %d subint %d (%f sec). Fake detection with measured mean.\n", pf.filenum, pf.tot_rows, pf.T);
+			      for(j=0;j<VDIF_NCHAN;j++)
+				for(p=0;p<4;p++)
+				  det[j][p]=mean_det[j][p];
+			      inval++;
+			    }
 			
 			  // Accumulate detection value
 			  for(j=0;j<VDIF_NCHAN;j++)
-				{
-				  for(p=0;p<npol;p++)
-					sdet[j][p]+=det[j][p];
-				}
+			    {
+			      for(p=0;p<npol;p++)
+				sdet[j][p]+=det[j][p];
+			    }
 
 			  // Update phase counters
 			  pha_ct++;
@@ -634,8 +695,13 @@ int main(int argc, char *argv[])
 				  seed=iseed;
 				}
 
-			  // Break at the end of vdif file
-			  if(feof (vdif[0]) || feof (vdif[1])) break;
+			  // Break out if the end of data reached for either pol
+			  for(j=0;j<2;j++)
+			    if(ctframe[j] == nfm_p[j] && nfm_p[j] < Nfm)
+			      {
+				k++;
+				break;
+			      }
 			}
 		
 		  // Break when not enough frames to get a sample
@@ -661,12 +727,7 @@ int main(int argc, char *argv[])
 				  memcpy(pf.sub.rawdata+i*sizeof(float)*1*VDIF_NCHAN+sizeof(float)*j,&sdet[j][0],sizeof(float));
 				}
 			}
-		  // Break at the end of vdif file
-		  if(feof (vdif[0]) || feof (vdif[1])) break;
 		}
-
-	  // Break when subint is not complete
-	  if(k!=tsf || i!=pf.hdr.nsblk) break;
 
 	  // Update offset from Start of subint
 	  pf.sub.offs = (pf.tot_rows + 0.5) * pf.sub.tsubint;
@@ -674,9 +735,12 @@ int main(int argc, char *argv[])
 	  // Write subint
 	  psrfits_write_subint(&pf);
 	  printf("Subint %i written.\n",pf.sub.tsubint);
-	  if(feof(vdif[0]) || feof(vdif[1])) break;
+
+	  // Break when subint is not complete
+	  if(k!=tsf || i!=pf.hdr.nsblk) break;
+
 	} while(!feof(vdif[0]) && !feof(vdif[1]) && !pf.status && pf.T < pf.hdr.scanlen);
-	
+ 	
   // Close the last file and cleanup
   fits_close_file(pf.fptr, &(pf.status));
   free(pf.sub.dat_freqs);
@@ -688,8 +752,15 @@ int main(int argc, char *argv[])
   free(buffer[1]);
   fclose(vdif[0]);
   fclose(vdif[1]);
-  
-  printf("Wrote %d subints (%f sec) in %d files.\n",pf.tot_rows, pf.T, pf.filenum);
+  fftwf_free(out_p0);
+  fftwf_free(out_p1);
+  fftwf_destroy_plan(pl0);
+  fftwf_destroy_plan(pl1);
+  if(nthd>1)
+    fftwf_cleanup_threads();
 
+  printf("Wrote %d subints (%f sec) in %d files.\n",pf.tot_rows, pf.T, pf.filenum);
+  printf("Percentage of valid data: %.2f\n",1.0-(float)inval/offset[0]);
+  
   return;
 }
