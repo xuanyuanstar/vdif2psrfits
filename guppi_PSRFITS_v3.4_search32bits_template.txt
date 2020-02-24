@@ -12,6 +12,7 @@ ANT_X   =   882589.65          / [m] Antenna ITRF X-coordinate (D)
 ANT_Y   = -4924872.32          / [m] Antenna ITRF Y-coordinate (D)
 ANT_Z   =  3943729.348         / [m] Antenna ITRF Z-coordinate (D)
 FRONTEND= '                '   / Rx and feed ID
+IBEAM   = 0                    / Beam ID for multibeam systems
 NRCVR   = 2                    / Number of receiver polarisation channels
 FD_POLN = 'LIN'                / LIN or CIRC
 FD_HAND = -1                   / +/- 1. +1 is LIN:A=X,B=Y, CIRC:A=L,B=R (I)

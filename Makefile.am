@@ -1,6 +1,5 @@
 AM_CFLAGS = -I@top_srcdir@/ @CFITSIO_CFLAGS@ @FFTW_CFLAGS@
 
-#bin_PROGRAMS= vdif2psrfitsPico vdif2psrfitsALMA
 bin_PROGRAMS = vdif2psrfitsALMA vdif2psrfitsPico
 lib_LTLIBRARIES = libVDIF.la
 
@@ -13,4 +12,4 @@ vdif2psrfitsALMA_LDADD = libVDIF.la @CFITSIO_LIBS@ @FFTW_LIBS@ -lfftw3f_threads
 vdif2psrfitsPico_SOURCES = vdif2psrfitsPico.c
 vdif2psrfitsPico_LDADD = libVDIF.la @CFITSIO_LIBS@ @FFTW_LIBS@ -lfftw3f_threads
 
-AM_CPPFLAGS = -DPSRFITS_TEMPLATE_DIR='"/home/kliu/Soft/vdif2psrfits/"'
+AM_CPPFLAGS = -DPSRFITS_TEMPLATE_DIR='"/fpra/galc/02/Soft/src/vdif2psrfits/"'

@@ -295,6 +295,16 @@ int main(int argc, char *argv[])
     }
     fftwf_plan_with_nthreads(nthd);
   }
+  pl0 = fftwf_plan_dft_r2c_1d(Nts, in_p0, out_p0, FFTW_MEASURE);
+  pl1 = fftwf_plan_dft_r2c_1d(Nts, in_p1, out_p1, FFTW_MEASURE);
+  if (pl0 != NULL && pl1 != NULL)
+    printf("Done.\n");
+  else
+    {
+      fprintf(stderr,"Error in creating FFT plan.\n");
+      exit(0);
+    }
+  
   // Allocate memo for frames
   for(j=0;j<2;j++)
 	{
@@ -307,8 +317,8 @@ int main(int argc, char *argv[])
   for(j=0;j<4;j++)
 	for(k=0;k<VDIF_NCHAN;k++)
 	  {
-		acc_det[k][j]=0.0;
-		accsq_det[k][j]=0.0;
+	    acc_det[k][j]=0.0;
+	    accsq_det[k][j]=0.0;
 	  }
   fct=0;	  
   for(j=0;j<2;j++)
@@ -731,11 +741,14 @@ int main(int argc, char *argv[])
 
 	  // Update offset from Start of subint
 	  pf.sub.offs = (pf.tot_rows + 0.5) * pf.sub.tsubint;
-
 	  // Write subint
 	  psrfits_write_subint(&pf);
-	  printf("Subint %i written.\n",pf.sub.tsubint);
-
+	  if((int)pf.sub.tsubint == 0)
+	    printf("Subint written: ");
+	  printf("%i ",pf.sub.tsubint);
+	  if((int)pf.sub.tsubint == pf.rows_per_file)
+	    printf("\n");
+	  
 	  // Break when subint is not complete
 	  if(k!=tsf || i!=pf.hdr.nsblk) break;
 
