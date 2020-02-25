@@ -516,8 +516,10 @@ int main(int argc, char *argv[])
 		  offset[j]=getVDIFFrameOffset((const vdif_header *)vfhdrst, (const vdif_header *)vfhdr[j], fps);
 
 		  // Gap from the last frames
-		  if(offset[j] > offset_pre[j]+1)
+		  if( !getVDIFFrameInvalid((const vdif_header *)vfhdr[j]) && offset[j] > offset_pre[j]+1)
 		    {
+		      if(ifverbose)
+			fprintf(stderr,"Pol%i: Current frame (%Ld) not consecutive from previous (%Ld).\n",j,offset[j],offset_pre[j]);
 		      pval[j] = false;
 		      fseek(vdif[j],-VDIF_HEADER_BYTES,SEEK_CUR);
 		      offset_pre[j]++;
@@ -526,7 +528,7 @@ int main(int argc, char *argv[])
 		  else
 		    {
 		      memcpy(buffer[j],chunk[j]+ctframe[j]*(fbytes+VDIF_HEADER_BYTES)+VDIF_HEADER_BYTES,fbytes);
-		      offset_pre[j]=offset[j];
+		      offset_pre[j]++;
 		      ctframe[j]++;
 
 		      // If end of buffer 
@@ -646,7 +648,7 @@ int main(int argc, char *argv[])
     fftwf_cleanup_threads();
 
   printf("Wrote %d subints (%f sec) in %d files.\n",pf.tot_rows, pf.T, pf.filenum);
-  printf("Percentage of valid data: %.2f\n",1.0-(float)inval/offset[0]);
+  printf("Percentage of valid data: %.2f%%\n",(1.0-(float)inval/offset[0])*100.0);
 
   return;
 }

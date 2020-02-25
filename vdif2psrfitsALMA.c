@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     }
   
   // Read arguments
-  while ((arg=getopt(argc,argv,"hf:i:j:s:n:k:t:O:S:D:r:c:dPp:M")) != -1)
+  while ((arg=getopt(argc,argv,"hf:i:j:s:n:k:t:O:S:D:r:c:d:Pp:Mv")) != -1)
 	{
 	  switch(arg)
 		{
@@ -201,6 +201,10 @@ int main(int argc, char *argv[])
 		  ifout=true;
 		  break;
 
+		case 'v':
+		  ifverbose=true;
+		  break;
+		  
 		case 'h':
 		  usage(argv[0]);
 		  return 0;
@@ -286,7 +290,7 @@ int main(int argc, char *argv[])
   in_p1 = (float *) malloc(sizeof(float)*Nts);
   out_p0 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
   out_p1 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
-  printf("Determining FFT plan...length %d...",Nts);
+  fprintf(stdout,"Determining FFT plan...length %d...",Nts);
   if(nthd > 1) {
     i=fftwf_init_threads();
     if(!i) {
@@ -298,7 +302,7 @@ int main(int argc, char *argv[])
   pl0 = fftwf_plan_dft_r2c_1d(Nts, in_p0, out_p0, FFTW_MEASURE);
   pl1 = fftwf_plan_dft_r2c_1d(Nts, in_p1, out_p1, FFTW_MEASURE);
   if (pl0 != NULL && pl1 != NULL)
-    printf("Done.\n");
+    fprintf(stdout,"Done.\n");
   else
     {
       fprintf(stderr,"Error in creating FFT plan.\n");
@@ -535,7 +539,7 @@ int main(int argc, char *argv[])
 		accsq_det[k][j]=0.0;
 	  }
   
-  fprintf(stderr,"Header prepared. Start to write data...\n");
+  fprintf(stdout,"Header prepared. Start to write data...\n");
 
   // First read of data chunk
   for(i=0;i<2;i++)
@@ -549,7 +553,6 @@ int main(int argc, char *argv[])
   // Main loop to write subints
   do
 	{
-
 	  memset(pf.sub.rawdata,0,sizeof(unsigned char)*pf.sub.bytes_per_subint);
 
 	  // Fill time samples in each subint: pf.sub.rawdata
@@ -574,19 +577,20 @@ int main(int argc, char *argv[])
 			      // Get frame offset
 			      offset[j]=getVDIFFrameOffset((const vdif_header *)vfhdrst, (const vdif_header *)vfhdr[j], fps);
 
-			      // Gap from the last frames
-			      if(offset[j] > offset_pre[j]+1)
+			      // Valid frame and gap from the last frames
+			      if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[j]) && offset[j] > offset_pre[j]+1)
 				{
+				  if(ifverbose)
+				    fprintf(stderr,"Pol%i: Current frame (%Ld) not consecutive from previous (%Ld).\n",j,offset[j],offset_pre[j]);
 				  pval[j] = false;
 				  fseek(vdif[j],-VDIF_HEADER_BYTES,SEEK_CUR);
 				  offset_pre[j]++;
 				}
-			      // Consecutive
-			      else
+			      else // Consecutive
 				{
 				  // Get data
 				  memcpy(buffer[j],chunk[j]+ctframe[j]*(fbytes+VDIF_HEADER_BYTES)+VDIF_HEADER_BYTES,fbytes);
-				  offset_pre[j]=offset[j];
+				  offset_pre[j]++;
 				  ctframe[j]++;
 
 				  // If end of buffer 
@@ -741,13 +745,10 @@ int main(int argc, char *argv[])
 
 	  // Update offset from Start of subint
 	  pf.sub.offs = (pf.tot_rows + 0.5) * pf.sub.tsubint;
+
 	  // Write subint
 	  psrfits_write_subint(&pf);
-	  if((int)pf.sub.tsubint == 0)
-	    printf("Subint written: ");
-	  printf("%i ",pf.sub.tsubint);
-	  if((int)pf.sub.tsubint == pf.rows_per_file)
-	    printf("\n");
+	  fprintf(stdout,"Subint written: %d ...\n",pf.tot_rows);
 	  
 	  // Break when subint is not complete
 	  if(k!=tsf || i!=pf.hdr.nsblk) break;
@@ -773,7 +774,7 @@ int main(int argc, char *argv[])
     fftwf_cleanup_threads();
 
   printf("Wrote %d subints (%f sec) in %d files.\n",pf.tot_rows, pf.T, pf.filenum);
-  printf("Percentage of valid data: %.2f\n",1.0-(float)inval/offset[0]);
+  printf("Percentage of valid data: %.2f%%\n",(1.0-(float)inval/offset[0])*100.0);
   
   return;
 }
