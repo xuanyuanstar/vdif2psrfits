@@ -321,3 +321,14 @@ void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned cha
   for(i=0;i<2;i++)
     free(buff8[i]);
 }
+
+int getVDIFFrameInvalid_robust(const vdif_header *header, int framebytes)
+{
+  int f;
+  
+  f=getVDIFFrameBytes(header);
+  if(f != framebytes || getVDIFFrameInvalid(header))
+    return 1;
+  else
+    return 0;
+}

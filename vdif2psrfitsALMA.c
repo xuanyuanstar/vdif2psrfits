@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
 	  fread(vfhdr[1],1,VDIF_HEADER_BYTES,vdif[1]);
 		  
 	  // Valid frame for both pols
-	  if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) && !getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
+	  if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES))
 		{
 		  // Read data in frame
 		  fread(buffer[0],1,fbytes,vdif[0]);
@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
 	fread(vfhdr[j],1,VDIF_HEADER_BYTES,vdif[j]);
 
 	// Valid frame
-	if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[j]))
+	if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],fbytes+VDIF_HEADER_BYTES))
 	  {
 	    mjd[j]=getVDIFFrameDMJD((const vdif_header *)vfhdr[j], fps);
 	    break;
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
     }
 
   // Synchronize starting time
-  while(mjd[0]!=mjd[1] || getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) || getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
+  while(mjd[0]!=mjd[1] || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES) || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES))
     {
       if(mjd[0]<mjd[1])
 	j=0;
@@ -578,7 +578,7 @@ int main(int argc, char *argv[])
 			      offset[j]=getVDIFFrameOffset((const vdif_header *)vfhdrst, (const vdif_header *)vfhdr[j], fps);
 
 			      // Valid frame and gap from the last frames
-			      if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[j]) && offset[j] > offset_pre[j]+1)
+			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j], fbytes+VDIF_HEADER_BYTES) && offset[j] > offset_pre[j]+1)
 				{
 				  if(ifverbose)
 				    fprintf(stderr,"Pol%i: Current frame (%Ld) not consecutive from previous (%Ld).\n",j,offset[j],offset_pre[j]);
@@ -614,7 +614,7 @@ int main(int argc, char *argv[])
 			  if(pval[0] == true && pval[1] == true) 
 			    {
 			      // Valid frame
-			      if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) && !getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
+			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES))
 				{
 				  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat,in_p0,in_p1,out_p0,out_p1,pl0,pl1);
 

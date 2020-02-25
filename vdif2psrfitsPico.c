@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 		  fread(vfhdr[j],1,VDIF_HEADER_BYTES,vdif[j]);
 		  
 		  //Valid frame
-		  if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[j]))
+		  if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],VDIF_HEADER_BYTES+fbytes))
 			{
 			  //Read data in frame
 			  fread(buffer[j],1,fbytes,vdif[j]);
@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
 	fread(vfhdr[j],1,VDIF_HEADER_BYTES,vdif[j]);
 
 	// Valid frame
-	if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[j]))
+	if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],VDIF_HEADER_BYTES+fbytes))
 	  {
 	    mjd[j]=getVDIFFrameDMJD((const vdif_header *)vfhdr[j], fps);
 	    break;
@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
     }
 
   // Synchronize starting time
-  while(mjd[0]!=mjd[1] || getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) || getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
+  while(mjd[0]!=mjd[1] || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],VDIF_HEADER_BYTES+fbytes) || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],VDIF_HEADER_BYTES+fbytes))
     {
       if(mjd[0]<mjd[1])
 	j=0;
@@ -516,7 +516,7 @@ int main(int argc, char *argv[])
 		  offset[j]=getVDIFFrameOffset((const vdif_header *)vfhdrst, (const vdif_header *)vfhdr[j], fps);
 
 		  // Gap from the last frames
-		  if( !getVDIFFrameInvalid((const vdif_header *)vfhdr[j]) && offset[j] > offset_pre[j]+1)
+		  if( !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],VDIF_HEADER_BYTES+fbytes) && offset[j] > offset_pre[j]+1)
 		    {
 		      if(ifverbose)
 			fprintf(stderr,"Pol%i: Current frame (%Ld) not consecutive from previous (%Ld).\n",j,offset[j],offset_pre[j]);
@@ -552,7 +552,7 @@ int main(int argc, char *argv[])
 	      if(pval[0] == true && pval[1] == true) 
 		{
 		  // Valid frame
-		  if(!getVDIFFrameInvalid((const vdif_header *)vfhdr[0]) && !getVDIFFrameInvalid((const vdif_header *)vfhdr[1]))
+		  if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],VDIF_HEADER_BYTES+fbytes) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],VDIF_HEADER_BYTES+fbytes))
 		    getVDIFFrameDetection_1chan(buffer[0],buffer[1],fbytes,det,nchan,dstat,in_p0,in_p1,out_p0,out_p1,pl0,pl1);
 		  // Invalid frame
 		  else
