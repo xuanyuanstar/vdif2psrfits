@@ -80,21 +80,21 @@ int64_t getVDIFFrameOffset(const vdif_header *headerst, const vdif_header *heade
 int main(int argc, char *argv[])
 {
   FILE *vdif[2],*out;
-  bool pval[2], ifverbose, ifpol[2], ifout;
+  bool pval[2], ifverbose, ifpol[2], ifout, chkend[2], pend[2];
   struct psrfits pf;
   
   char vname[2][1024], oroute[1024], ut[30],mjd_str[25],vfhdr[2][VDIF_HEADER_BYTES],vfhdrst[VDIF_HEADER_BYTES],srcname[16],dstat,ra[64],dec[64];
   int arg,j_i,j_j,j_O,n_f,i,j,k,p,nfps,fbytes,fnum,vd[2],nf_stat,ftot[2][2][VDIF_NCHAN],ct,tsf,bs,tet,nf_skip,dati,npol,pch,mean_sampl,sk,nthd,nread[2];
   float freq,s_stat,dat,s_skip,*in_p0, *in_p1;
   double spf,pha_start,len_scan,len_dip,mean_det[VDIF_NCHAN][4],acc_det[VDIF_NCHAN][4],rms_det[VDIF_NCHAN][4],accsq_det[VDIF_NCHAN][4], mjd[2];
-  long int idx[2],seed,iseed,pha_start_nf,len_scan_nf,len_dip_nf,pha_ct,fct,hunksize,Nfm,ctframe[2],nfm_p[2],chunksize,Nts;
+  long int idx[2],seed,iseed,pha_start_nf,len_scan_nf,len_dip_nf,pha_ct,fct,Nfm,index[2],nfm_p[2],chunksize[2],Nts,chunksize_org,nskip;
   unsigned char *buffer[2], *obuffer[2],*chunk[2];
   float det[VDIF_NCHAN][4],sdet[VDIF_NCHAN][4];
   time_t t;
   fftwf_complex *out_p0,*out_p1;
   fftwf_plan pl0,pl1;
   int64_t offset_pre[2],offset[2];
-  uint32_t fps,inval;
+  uint32_t fps,inval,inval_sub;
   
   freq=0.0;
   s_stat=0.0;
@@ -103,14 +103,17 @@ int main(int argc, char *argv[])
   strcpy(srcname,"J0835-4510");
   dstat='C';
   npol=4;
-  chunksize=1000000000;
   nthd=1;
   inval=0;
   ifverbose = false;
   ifout = false;
-  for(i=0;i<2;i++)
+  chunksize_org=1000000000;
+  for(i=0;i<2;i++) {
     ifpol[i] = false;
-
+    chkend[i]=false;
+    pend[i]=false;
+    chunksize[i]=chunksize_org;
+  }
   pch=0;
   pha_start=0.0;
   len_scan=16.128;
@@ -277,7 +280,7 @@ int main(int argc, char *argv[])
   nf_stat=s_stat*1.0e6/spf;
 
   //Calculate number of frames in one read chunk
-  Nfm=chunksize/(fbytes+VDIF_HEADER_BYTES);
+  Nfm=chunksize_org/(fbytes+VDIF_HEADER_BYTES);
   printf("Number of frame per reading chunk: %ld\n",Nfm);
 
   // Calculate how many frames to skip from the beginning
@@ -544,15 +547,16 @@ int main(int argc, char *argv[])
   // First read of data chunk
   for(i=0;i<2;i++)
     {
-      chunk[i] = (unsigned char *)malloc(Nfm * (fbytes+VDIF_HEADER_BYTES));
-      nread[i] = fread(chunk[i],1,Nfm * (fbytes+VDIF_HEADER_BYTES),vdif[i]);
-      ctframe[i] = 0;
+      chunk[i] = (unsigned char *)malloc(chunksize[i]+fbytes+VDIF_HEADER_BYTES);
+      nread[i] = fread(chunk[i],1,chunksize[i],vdif[i]);
+      index[i] = 0;
       nfm_p[i] = Nfm;
     }
-
+  
   // Main loop to write subints
   do
 	{
+	  inval_sub = 0;
 	  memset(pf.sub.rawdata,0,sizeof(unsigned char)*pf.sub.bytes_per_subint);
 
 	  // Fill time samples in each subint: pf.sub.rawdata
@@ -564,52 +568,100 @@ int main(int argc, char *argv[])
 			  for(p=0;p<npol;p++)
 			    sdet[k][p]=0.0;
 			} 
-		  // Loop over frames
+		  // Accumulate frame detections
 		  for(k=0;k<tsf;k++)
 			{
 			  // Consecutive check on both pols
 			  for(j=0;j<2;j++)
 			    {
-			      // Read frame header
-			      memcpy(vfhdr[j],chunk[j]+ctframe[j]*(fbytes+VDIF_HEADER_BYTES),VDIF_HEADER_BYTES);
+			      nskip=0;
+
+			      // Get real frame header while dealing with non-integer gaps in between frames
+			      for(;;) {
+				// Not enough data in chunk to fill header
+				if(index[j] + VDIF_HEADER_BYTES > chunksize[j])
+				  {
+				    if(ifverbose)
+				      fprintf(stdout,"Pol %i read new chunk.\n",j);
+				    // Reset data chunk: Move leftover to the beginning and read in another chunk
+				    memmove(chunk[j],chunk[j]+index[j],chunksize[j]-index[j]);
+				    if(!chkend[j])
+				      nread[j]=fread(chunk[j]+chunksize[j]-index[j],1,chunksize_org, vdif[j]);
+				    else
+				      {
+					pend[j]=true;
+					break;
+				      }
+				    if(nread[j]<chunksize_org)
+				      chkend[j]=true;
+				    
+				    // New data chunk size and index
+				    chunksize[j] = nread[j] + chunksize[j]-index[j];
+				    index[j]=0;
+				  }
+				memcpy(vfhdr[j],chunk[j]+index[j],VDIF_HEADER_BYTES);
+				if (getVDIFFrameBytes((const vdif_header *)vfhdr[j]) == fbytes+VDIF_HEADER_BYTES)
+				  break;
+				else
+				  {
+				    index[j]++;
+				    nskip++;
+				  }
+			      }
+
+			      if(pend[j])
+				break;
+			      
+			      if(ifverbose && nskip>0)
+				fprintf(stdout,"Pol%i Skipped %i bytes.\n",j,nskip);
+				
 			      pval[j] = true;
 
 			      // Get frame offset
 			      offset[j]=getVDIFFrameOffset((const vdif_header *)vfhdrst, (const vdif_header *)vfhdr[j], fps);
 
-			      // Valid frame and gap from the last frames
-			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j], fbytes+VDIF_HEADER_BYTES) && offset[j] > offset_pre[j]+1)
+			      // Valid frame and Gap from the last frames
+			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],fbytes+VDIF_HEADER_BYTES) && offset[j] > offset_pre[j]+1)
 				{
 				  if(ifverbose)
 				    fprintf(stderr,"Pol%i: Current frame (%Ld) not consecutive from previous (%Ld).\n",j,offset[j],offset_pre[j]);
 				  pval[j] = false;
-				  fseek(vdif[j],-VDIF_HEADER_BYTES,SEEK_CUR);
 				  offset_pre[j]++;
 				}
 			      else // Consecutive
 				{
-				  // Get data
-				  memcpy(buffer[j],chunk[j]+ctframe[j]*(fbytes+VDIF_HEADER_BYTES)+VDIF_HEADER_BYTES,fbytes);
-				  offset_pre[j]++;
-				  ctframe[j]++;
-
-				  // If end of buffer 
-				  if(ctframe[j] == nfm_p[j])
+				  // Not enough data in chunk to fill in frame
+				  if(index[j] + VDIF_HEADER_BYTES + fbytes > chunksize[j])
 				    {
-				      // Last read was complete, try to read more
-				      if(nfm_p[j] == Nfm)
+				      if(ifverbose)
+					fprintf(stdout,"Pol %i read new chunk.\n",j);
+				      // Reset data chunk: Move leftover to the beginning and read in another chunk
+				      memmove(chunk[j],chunk[j]+index[j],chunksize[j]-index[j]);
+				      if(!chkend[j])
+					nread[j]=fread(chunk[j]+chunksize[j]-index[j],1,chunksize_org, vdif[j]);
+				      else
 					{
-					  nread[j]=fread(chunk[j],1,Nfm * (fbytes+VDIF_HEADER_BYTES),vdif[j]);
-					  ctframe[j]=0;
-					        
-					  // Running into the last chunk of data, update frame number
-					  if(nread[j] != sizeof(unsigned char) * Nfm * (fbytes+VDIF_HEADER_BYTES))
-					    nfm_p[j] = nread[j] / (fbytes+VDIF_HEADER_BYTES);
+					  pend[j]=true;
+					  break;
 					}
+				      if(nread[j]<chunksize_org)
+					chkend[j]=true;
+				      
+				      // New data chunk size and index
+				      chunksize[j] = nread[j] + chunksize[j]-index[j];
+				      index[j]=0;
 				    }
+
+				  // Get data
+				  memcpy(buffer[j],chunk[j] + index[j] + VDIF_HEADER_BYTES,fbytes);
+				  offset_pre[j]++;
+				  index[j]+=fbytes+VDIF_HEADER_BYTES;
 				}
 			    }
 
+			  if(pend[0] || pend[1])
+			    break;
+			  
 			  // Both pol consecutive
 			  if(pval[0] == true && pval[1] == true) 
 			    {
@@ -674,7 +726,7 @@ int main(int argc, char *argv[])
 				  for(j=0;j<VDIF_NCHAN;j++)
 				    for(p=0;p<4;p++)
 				      det[j][p]=mean_det[j][p];
-				  inval++;
+				  inval++; inval_sub++;
 				}
 			    }
 			  // One pol not consecutive
@@ -686,7 +738,7 @@ int main(int argc, char *argv[])
 			      for(j=0;j<VDIF_NCHAN;j++)
 				for(p=0;p<4;p++)
 				  det[j][p]=mean_det[j][p];
-			      inval++;
+			      inval++; inval_sub++;
 			    }
 			
 			  // Accumulate detection value
@@ -708,14 +760,6 @@ int main(int argc, char *argv[])
 				  iseed=iseed-2;
 				  seed=iseed;
 				}
-
-			  // Break out if the end of data reached for either pol
-			  for(j=0;j<2;j++)
-			    if(ctframe[j] == nfm_p[j] && nfm_p[j] < Nfm)
-			      {
-				k++;
-				break;
-			      }
 			}
 		
 		  // Break when not enough frames to get a sample
@@ -748,7 +792,7 @@ int main(int argc, char *argv[])
 
 	  // Write subint
 	  psrfits_write_subint(&pf);
-	  fprintf(stdout,"Subint written: %d ...\n",pf.tot_rows);
+	  fprintf(stdout,"Subint written: %d. Faked samples: %lu out of %lu.\n",pf.tot_rows,inval_sub,pf.hdr.nsblk);
 	  
 	  // Break when subint is not complete
 	  if(k!=tsf || i!=pf.hdr.nsblk) break;

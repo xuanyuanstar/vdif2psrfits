@@ -324,11 +324,17 @@ void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned cha
 
 int getVDIFFrameInvalid_robust(const vdif_header *header, int framebytes)
 {
-  int f;
-  
+  int f, mjd,sec,num;
   f=getVDIFFrameBytes(header);
-  if(f != framebytes || getVDIFFrameInvalid(header))
-    return 1;
+  mjd=getVDIFFrameMJD(header);
+  sec=getVDIFFrameSecond(header);
+  num=getVDIFFrameNumber(header);
+  
+  if(f != framebytes || getVDIFFrameInvalid(header) || mjd < 50000 || mjd > 60000 || sec < 0 || num < 0 || num > 125000)
+    {
+      fprintf(stderr,"Invalid frame: bytes %i mjd %i sec %i num %i\n",f,mjd,sec,num);
+      return 1;
+    }
   else
     return 0;
 }
