@@ -19,7 +19,7 @@
 #include "dec2hms.h"
 #include <fftw3.h>
 #include <stdbool.h>
-
+#include "ran.c"
 
 static double VDIF_BW = 2000.0; //Total Bandwidth in MHz
 static int VDIF_BIT = 2;   //Bit per sample
@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
   time(&t);
   iseed=0-t;
   seed=iseed;
-  
+
   // Read the first header of vdif pol0
   vdif[0]=fopen(vname[0],"rb");
   fread(vfhdr[0],1,VDIF_HEADER_BYTES,vdif[0]);
@@ -691,12 +691,13 @@ int main(int argc, char *argv[])
 					  for(j=0;j<VDIF_NCHAN;j++)
 					    for(p=0;p<4;p++)
 					      {
-						// In case no values in the past cycle
 						if(acc_det[j][p]!=0.0)
 						  {
 						    mean_det[j][p]=acc_det[j][p]/(double)fct;
 						    rms_det[j][p]=sqrt(accsq_det[j][p]/(double)fct-pow(mean_det[j][p],2.0));
 						  }
+
+						// Reset accumulation
 						acc_det[j][p]=0.0;
 						accsq_det[j][p]=0.0;
 					      }
