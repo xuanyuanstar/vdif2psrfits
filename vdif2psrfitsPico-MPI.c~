@@ -17,6 +17,7 @@
 #include "vdif2psrfits.h"
 #include "psrfits.h"
 #include "dec2hms.h"
+#include "mpi.h"
 #include <fftw3.h>
 #include <stdbool.h>
 
@@ -43,7 +44,9 @@ void usage(char *prg_name)
 	  " -d   Number of thread to use in FFT (by default 1)\n"
 	  " -v   Verbose\n"
 	  " -O   Route of the output file \n"
-	  " -h   Available options\n",
+	  " -h   Available options\n"
+	  " Open MPI options\n"
+	  " -p   Number of processors (by default from MPI_Comm_size)",
 	  prg_name);
   exit(0);
 }
@@ -80,7 +83,7 @@ int main(int argc, char *argv[])
   
   char vname[2][1024],oroute[1024],ut[30],dat,vfhdr[2][VDIF_HEADER_BYTES],vfhdrst[VDIF_HEADER_BYTES],srcname[16],dstat,ra[64],dec[64],telname[64];
   int arg,n_f,i,j,k,fbytes,vd[2],nf_stat,ct,tsf,dati,nchan,npol,bs,Nts,nthd,nread[2],nf_skip;
-  float freq,s_stat,fmean[2][2], *in_p0, *in_p1,s_skip;
+  float freq,s_stat,fmean[2][2], *in_p0, *in_p1,s_skip, ***detmap;
   double mjd[2];
   long int idx[2], seed, chunksize[2],chunksize_org,Nfm,nfm_p[2],nskip, index[2];
   unsigned char *buffer[2], *obuffer[2], *chunk[2];
@@ -160,14 +163,9 @@ int main(int argc, char *argv[])
 	  strcpy(srcname,optarg);
 	  break;
 		  
-	case 'D':
+        case 'D':
 	  strcpy(&dstat,optarg);
-	  if(dstat=='C' || dstat=='S')
-	    npol=4;
-	  else if(dstat=='P')
-	    npol=2;
-	  else
-	    npol=1;
+	  if(dstat!='C') npol=1;
 	  break;
 		  
 	case 'O':
@@ -505,23 +503,29 @@ int main(int argc, char *argv[])
       index[i] = 0;
     }
 
+  // Allocate memory for detection map
+  // Get 2 times the array size to deal with potential fake samples
+  nts_map = chunksize_org / (fbytes + VDIF_HEADER_BYTES) * 2;
+  float [nts_map][nchan][4];
+  for(i=0;i<nts_map;i++)
+    for(j=0;j<nchan;j++)
+      for(k=0;k<4;k++)
+	nts_map[i][j][k] = 0.0;
+
   // Main loop to write subints
   do
     {
       inval_sub = 0;
       memset(pf.sub.rawdata,0,sizeof(unsigned char)*pf.sub.bytes_per_subint);
 
-      // Fill time samples in each subint: pf.sub.rawdata
-      for(i=0;i<pf.hdr.nsblk;i++)
+      // Initialize sample block
+      for(k=0;k<nchan;k++)
 	{
-	  // Initialize sample block
-	  for(k=0;k<nchan;k++)
-	    {
 	      sdet[k][0]=0.0;
 	      sdet[k][1]=0.0;
 	      sdet[k][2]=0.0;
 	      sdet[k][3]=0.0;
-	    }
+	}
 			  
 	  // Loop over frames
 	  for(k=0;k<tsf;k++)
@@ -532,8 +536,7 @@ int main(int argc, char *argv[])
 		  nskip=0;
 
 		  // Get real frame header while dealing with non-integer gaps in between frames 
-		  for(;;) 
-		    {
+		  for(;;) {
 		    // Not enough data in chunk to fill header
 		    if(index[j] + VDIF_HEADER_BYTES > chunksize[j])
 		      {
@@ -566,7 +569,7 @@ int main(int argc, char *argv[])
 			index[j]++;
 			nskip++;
 		      }
-		    }
+		  }
 
 		  if(pend[j])
 		    break;
@@ -680,6 +683,11 @@ int main(int argc, char *argv[])
 		  memcpy(pf.sub.rawdata+i*sizeof(float)*1*nchan+sizeof(float)*j,&sdet[j][0],sizeof(float));
 		}
 	    }
+
+	  // Fill time samples in each subint: pf.sub.rawdata
+	  for(i=0;i<pf.hdr.nsblk;i++)
+
+
 	}
 
       // Update offset from Start of subint

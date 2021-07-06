@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 	  fread(vfhdr[1],1,VDIF_HEADER_BYTES,vdif[1]);
 		  
 	  // Valid frame for both pols
-	  if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES))
+	  if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES,ifverbose) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES,ifverbose))
 		{
 		  // Read data in frame
 		  fread(buffer[0],1,fbytes,vdif[0]);
@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
 	fread(vfhdr[j],1,VDIF_HEADER_BYTES,vdif[j]);
 
 	// Valid frame
-	if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],fbytes+VDIF_HEADER_BYTES))
+	if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],fbytes+VDIF_HEADER_BYTES, ifverbose))
 	  {
 	    mjd[j]=getVDIFFrameDMJD((const vdif_header *)vfhdr[j], fps);
 	    break;
@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
     }
 
   // Synchronize starting time
-  while(mjd[0]!=mjd[1] || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES) || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES))
+  while(mjd[0]!=mjd[1] || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES,ifverbose) || getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES,ifverbose))
     {
       if(mjd[0]<mjd[1])
 	j=0;
@@ -578,11 +578,12 @@ int main(int argc, char *argv[])
 
 			      // Get real frame header while dealing with non-integer gaps in between frames
 			      for(;;) {
-				// Not enough data in chunk to fill header
+				// Not enough data left in chunk to fill header
 				if(index[j] + VDIF_HEADER_BYTES > chunksize[j])
 				  {
 				    if(ifverbose)
 				      fprintf(stdout,"Pol %i read new chunk.\n",j);
+
 				    // Reset data chunk: Move leftover to the beginning and read in another chunk
 				    memmove(chunk[j],chunk[j]+index[j],chunksize[j]-index[j]);
 				    if(!chkend[j])
@@ -599,6 +600,8 @@ int main(int argc, char *argv[])
 				    chunksize[j] = nread[j] + chunksize[j]-index[j];
 				    index[j]=0;
 				  }
+
+				// Shift forward by bytes until having a meaningful framebyte number
 				memcpy(vfhdr[j],chunk[j]+index[j],VDIF_HEADER_BYTES);
 				if (getVDIFFrameBytes((const vdif_header *)vfhdr[j]) == fbytes+VDIF_HEADER_BYTES)
 				  break;
@@ -621,11 +624,12 @@ int main(int argc, char *argv[])
 			      offset[j]=getVDIFFrameOffset((const vdif_header *)vfhdrst, (const vdif_header *)vfhdr[j], fps);
 
 			      // Valid frame and Gap from the last frames
-			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],fbytes+VDIF_HEADER_BYTES) && offset[j] > offset_pre[j]+1)
+			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[j],fbytes+VDIF_HEADER_BYTES,ifverbose) && offset[j] > offset_pre[j]+1)
 				{
 				  if(ifverbose)
 				    fprintf(stderr,"Pol%i: Current frame (%Ld) not consecutive from previous (%Ld).\n",j,offset[j],offset_pre[j]);
 				  pval[j] = false;
+				  fseek(vdif[j],-VDIF_HEADER_BYTES,SEEK_CUR);
 				  offset_pre[j]++;
 				}
 			      else // Consecutive
@@ -635,7 +639,9 @@ int main(int argc, char *argv[])
 				    {
 				      if(ifverbose)
 					fprintf(stdout,"Pol %i read new chunk.\n",j);
-				      // Reset data chunk: Move leftover to the beginning and read in another chunk
+
+				      // Reset data chunk: 
+				      // Move leftover to the beginning and read in another chunk
 				      memmove(chunk[j],chunk[j]+index[j],chunksize[j]-index[j]);
 				      if(!chkend[j])
 					nread[j]=fread(chunk[j]+chunksize[j]-index[j],1,chunksize_org, vdif[j]);
@@ -666,7 +672,7 @@ int main(int argc, char *argv[])
 			  if(pval[0] == true && pval[1] == true) 
 			    {
 			      // Valid frame
-			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES))
+			      if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],fbytes+VDIF_HEADER_BYTES,ifverbose) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],fbytes+VDIF_HEADER_BYTES,ifverbose))
 				{
 				  getVDIFFrameDetection_32chan(buffer[0],buffer[1],fbytes,det,dstat,in_p0,in_p1,out_p0,out_p1,pl0,pl1);
 
@@ -723,7 +729,7 @@ int main(int argc, char *argv[])
 				{
 				  // Create fake detection with measured mean
 				  if(ifverbose)
-				    fprintf(stderr,"Invalid frame detected in file %d subint %d (%f sec). Fake detection with measured mean.\n", pf.filenum, pf.tot_rows, pf.T);
+				    fprintf(stderr,"Invalid frame detected in file %d, subint %d (%f sec). Fake detection with measured mean.\n", pf.filenum, pf.tot_rows, pf.T);
 				  for(j=0;j<VDIF_NCHAN;j++)
 				    for(p=0;p<4;p++)
 				      det[j][p]=mean_det[j][p];
@@ -735,7 +741,7 @@ int main(int argc, char *argv[])
 			    {
 			      // Create fake detection with measured mean
 			      if(ifverbose)
-				fprintf(stderr,"Gap in frame count detected in file %d subint %d (%f sec). Fake detection with measured mean.\n", pf.filenum, pf.tot_rows, pf.T);
+				fprintf(stderr,"Gap in frame count detected in file %d, subint %d (%f sec). Fake detection with measured mean.\n", pf.filenum, pf.tot_rows, pf.T);
 			      for(j=0;j<VDIF_NCHAN;j++)
 				for(p=0;p<4;p++)
 				  det[j][p]=mean_det[j][p];

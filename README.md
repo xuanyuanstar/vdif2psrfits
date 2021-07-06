@@ -1,4 +1,4 @@
-# MPIvdif2psrfits
+# vdif2psrfits
 
 https://github.com/xuanyuanstar/vdif2psrfits
 
@@ -8,13 +8,10 @@ Software routines to convert VLBI VDIF format into pulsar search mode data in PS
  * Install cfitsio and fftw library. The code has been used with cfitsio3410 and fftw3.3.4.;
  * Modify "Makefile.am" to specify route to the source code (where it finds the PSRFITs header template);
  * In the "vdif2psrfits/" directory, run "./bootstrap";
- * Run "./configure CC=mpicc". You may need to specify links to cfitsio and fftw library manually, e.g.:
-
-./configure --prefix=/home/kliu/Soft/ --with-cfitsio-lib-dir=/home/kliu/Soft/lib/ --with-cfitsio-include-dir=/home/kliu/Soft/include/ CC=mpicc
-
+ * Run "./configure". You may need to specify links to cfitsio and fftw library manually;
  * Run "make && make install".
 
-# MPIvditf2psrfitsALMA
+# vditf2psrfitsALMA
 # Dealing with ALMA VDIF output, 32 x 62.5 MHz channels
 # Usage
   -f      Observing central frequency (MHz)
@@ -39,7 +36,7 @@ Patching power dip options:
 Example of a command:
  * vdif2psrfitsALMA -f 86268.0 -i X.vdif -j Y.vdif -n -1 -s 5 -S SgrA -r 17:45:40 -c -29:00:28 -t 1 -O OUTPUT_ROUTE -D S
 
-# MPIvdif2psrfitsPico
+# vdif2psrfitsPico
 # Deal with Pico & LMT VDIF output, 1 x 2 GHz channel
 # Usage
   -f   Observing central frequency (MHz)

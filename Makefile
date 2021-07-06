@@ -79,8 +79,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = x86_64-unknown-linux-gnu
 host_triplet = x86_64-unknown-linux-gnu
-bin_PROGRAMS = MPIvdif2psrfitsPico$(EXEEXT) \
-	MPIvdif2psrfitsALMA$(EXEEXT)
+bin_PROGRAMS = vdif2psrfitsALMA$(EXEEXT) vdif2psrfitsPico$(EXEEXT) \
+	vdif2psrfitsPicoMPI$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -149,12 +149,15 @@ am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 PROGRAMS = $(bin_PROGRAMS)
-am_MPIvdif2psrfitsALMA_OBJECTS = MPIvdif2psrfitsALMA.$(OBJEXT)
-MPIvdif2psrfitsALMA_OBJECTS = $(am_MPIvdif2psrfitsALMA_OBJECTS)
-MPIvdif2psrfitsALMA_DEPENDENCIES = libVDIF.la
-am_MPIvdif2psrfitsPico_OBJECTS = MPIvdif2psrfitsPico.$(OBJEXT)
-MPIvdif2psrfitsPico_OBJECTS = $(am_MPIvdif2psrfitsPico_OBJECTS)
-MPIvdif2psrfitsPico_DEPENDENCIES = libVDIF.la
+am_vdif2psrfitsALMA_OBJECTS = vdif2psrfitsALMA.$(OBJEXT)
+vdif2psrfitsALMA_OBJECTS = $(am_vdif2psrfitsALMA_OBJECTS)
+vdif2psrfitsALMA_DEPENDENCIES = libVDIF.la
+am_vdif2psrfitsPico_OBJECTS = vdif2psrfitsPico.$(OBJEXT)
+vdif2psrfitsPico_OBJECTS = $(am_vdif2psrfitsPico_OBJECTS)
+vdif2psrfitsPico_DEPENDENCIES = libVDIF.la
+am_vdif2psrfitsPicoMPI_OBJECTS = vdif2psrfitsPicoMPI.$(OBJEXT)
+vdif2psrfitsPicoMPI_OBJECTS = $(am_vdif2psrfitsPicoMPI_OBJECTS)
+vdif2psrfitsPicoMPI_DEPENDENCIES = libVDIF.la
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -189,10 +192,10 @@ AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libVDIF_la_SOURCES) $(MPIvdif2psrfitsALMA_SOURCES) \
-	$(MPIvdif2psrfitsPico_SOURCES)
-DIST_SOURCES = $(libVDIF_la_SOURCES) $(MPIvdif2psrfitsALMA_SOURCES) \
-	$(MPIvdif2psrfitsPico_SOURCES)
+SOURCES = $(libVDIF_la_SOURCES) $(vdif2psrfitsALMA_SOURCES) \
+	$(vdif2psrfitsPico_SOURCES) $(vdif2psrfitsPicoMPI_SOURCES)
+DIST_SOURCES = $(libVDIF_la_SOURCES) $(vdif2psrfitsALMA_SOURCES) \
+	$(vdif2psrfitsPico_SOURCES) $(vdif2psrfitsPicoMPI_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -237,13 +240,13 @@ distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing aclocal-1.13
+ACLOCAL = ${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing aclocal-1.13
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
 AR = ar
-AUTOCONF = ${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing autoconf
-AUTOHEADER = ${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing autoheader
-AUTOMAKE = ${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing automake-1.13
+AUTOCONF = ${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing autoconf
+AUTOHEADER = ${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing autoheader
+AUTOMAKE = ${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing automake-1.13
 AWK = gawk
 CC = mpicc
 CCDEPMODE = depmode=gcc3
@@ -252,6 +255,10 @@ CFITSIO_LIBS = -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm
 CFLAGS = -g -O2
 CPP = mpicc -E
 CPPFLAGS = 
+CXX = mpicc
+CXXCPP = mpicc -E
+CXXDEPMODE = depmode=gcc3
+CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -280,7 +287,7 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing makeinfo
+MAKEINFO = ${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /usr/bin/mkdir -p
 MPICC = mpicc
@@ -306,12 +313,13 @@ SHELL = /bin/sh
 SOCKET_LIBS = 
 STRIP = strip
 VERSION = 1.0
-abs_builddir = /home/kliu/Soft/MPIvdif2psrfits
-abs_srcdir = /home/kliu/Soft/MPIvdif2psrfits
-abs_top_builddir = /home/kliu/Soft/MPIvdif2psrfits
-abs_top_srcdir = /home/kliu/Soft/MPIvdif2psrfits
+abs_builddir = /home/kliu/Soft/vdif2psrfits
+abs_srcdir = /home/kliu/Soft/vdif2psrfits
+abs_top_builddir = /home/kliu/Soft/vdif2psrfits
+abs_top_srcdir = /home/kliu/Soft/vdif2psrfits
 ac_ct_AR = ar
 ac_ct_CC = mpicc
+ac_ct_CXX = mpicc
 ac_ct_DUMPBIN = 
 am__include = include
 am__leading_dot = .
@@ -338,7 +346,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/install-sh
+install_sh = ${SHELL} /home/kliu/Soft/vdif2psrfits/config/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -359,14 +367,17 @@ top_build_prefix =
 top_builddir = .
 top_srcdir = .
 ACLOCAL_AMFLAGS = -I config
-AM_CFLAGS = -I./ -I/home/kliu/Soft/include/   -DPSRFITS_TEMPLATE_DIR='"/home/kliu/Soft/MPIvdif2psrfits/templates/"'
+AM_CFLAGS = -I./ -I/home/kliu/Soft/include/   -DPSRFITS_TEMPLATE_DIR='"/home/kliu/Soft/vdif2psrfits/templates/"'
 lib_LTLIBRARIES = libVDIF.la
 libVDIF_la_SOURCES = dec2hms.c polyco.c vdifio.c write_psrfits.c cvrt2to8.c mjd2date.c getVDIFFrameDetection.c downsample.c
 libVDIF_la_LIBADD = -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lfftw3f  
-MPIvdif2psrfitsPico_SOURCES = MPIvdif2psrfitsPico.c
-MPIvdif2psrfitsPico_LDADD = libVDIF.la -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lfftw3f  -lfftw3f
-MPIvdif2psrfitsALMA_SOURCES = MPIvdif2psrfitsALMA.c
-MPIvdif2psrfitsALMA_LDADD = libVDIF.la -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lfftw3f  -lfftw3f
+vdif2psrfitsALMA_SOURCES = vdif2psrfitsALMA.c
+vdif2psrfitsALMA_LDADD = libVDIF.la -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lfftw3f  -lfftw3f_threads
+vdif2psrfitsPico_SOURCES = vdif2psrfitsPico.c
+vdif2psrfitsPico_LDADD = libVDIF.la -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lfftw3f  -lfftw3f_threads
+vdif2psrfitsPicoMPI_SOURCES = vdif2psrfitsPicoMPI.c
+vdif2psrfitsPicoMPI_LDADD = libVDIF.la -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lfftw3f  -lfftw3f
+AM_CPPFLAGS = -I./ -I/home/kliu/Soft/include/   -DPSRFITS_TEMPLATE_DIR='"/home/kliu/Soft/vdif2psrfits/templates/"'
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -509,13 +520,17 @@ clean-binPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
-MPIvdif2psrfitsALMA$(EXEEXT): $(MPIvdif2psrfitsALMA_OBJECTS) $(MPIvdif2psrfitsALMA_DEPENDENCIES) $(EXTRA_MPIvdif2psrfitsALMA_DEPENDENCIES) 
-	@rm -f MPIvdif2psrfitsALMA$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(MPIvdif2psrfitsALMA_OBJECTS) $(MPIvdif2psrfitsALMA_LDADD) $(LIBS)
+vdif2psrfitsALMA$(EXEEXT): $(vdif2psrfitsALMA_OBJECTS) $(vdif2psrfitsALMA_DEPENDENCIES) $(EXTRA_vdif2psrfitsALMA_DEPENDENCIES) 
+	@rm -f vdif2psrfitsALMA$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(vdif2psrfitsALMA_OBJECTS) $(vdif2psrfitsALMA_LDADD) $(LIBS)
 
-MPIvdif2psrfitsPico$(EXEEXT): $(MPIvdif2psrfitsPico_OBJECTS) $(MPIvdif2psrfitsPico_DEPENDENCIES) $(EXTRA_MPIvdif2psrfitsPico_DEPENDENCIES) 
-	@rm -f MPIvdif2psrfitsPico$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(MPIvdif2psrfitsPico_OBJECTS) $(MPIvdif2psrfitsPico_LDADD) $(LIBS)
+vdif2psrfitsPico$(EXEEXT): $(vdif2psrfitsPico_OBJECTS) $(vdif2psrfitsPico_DEPENDENCIES) $(EXTRA_vdif2psrfitsPico_DEPENDENCIES) 
+	@rm -f vdif2psrfitsPico$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(vdif2psrfitsPico_OBJECTS) $(vdif2psrfitsPico_LDADD) $(LIBS)
+
+vdif2psrfitsPicoMPI$(EXEEXT): $(vdif2psrfitsPicoMPI_OBJECTS) $(vdif2psrfitsPicoMPI_DEPENDENCIES) $(EXTRA_vdif2psrfitsPicoMPI_DEPENDENCIES) 
+	@rm -f vdif2psrfitsPicoMPI$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(vdif2psrfitsPicoMPI_OBJECTS) $(vdif2psrfitsPicoMPI_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -523,14 +538,15 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/MPIvdif2psrfitsALMA.Po
-include ./$(DEPDIR)/MPIvdif2psrfitsPico.Po
 include ./$(DEPDIR)/cvrt2to8.Plo
 include ./$(DEPDIR)/dec2hms.Plo
 include ./$(DEPDIR)/downsample.Plo
 include ./$(DEPDIR)/getVDIFFrameDetection.Plo
 include ./$(DEPDIR)/mjd2date.Plo
 include ./$(DEPDIR)/polyco.Plo
+include ./$(DEPDIR)/vdif2psrfitsALMA.Po
+include ./$(DEPDIR)/vdif2psrfitsPico.Po
+include ./$(DEPDIR)/vdif2psrfitsPicoMPI.Po
 include ./$(DEPDIR)/vdifio.Plo
 include ./$(DEPDIR)/write_psrfits.Plo
 

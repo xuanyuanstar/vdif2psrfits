@@ -4,8 +4,8 @@ AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE([-Wall foreign])
 
 AM_PROG_AR
-AC_PROG_CC([mpicc gcc cc])
-#AC_PROG_CXX([mpicc])
+AC_PROG_CC
+AC_PROG_CXX([mpicc])
 #AC_PROG_F77
 #AC_PROG_FC
 #AC_PROG_F77_C_O

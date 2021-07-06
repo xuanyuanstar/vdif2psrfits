@@ -44,32 +44,32 @@ PATH: /home/kliu/bin
 ## Core tests. ##
 ## ----------- ##
 
-configure:2188: checking for a BSD-compatible install
-configure:2256: result: /usr/bin/install -c
-configure:2267: checking whether build environment is sane
-configure:2322: result: yes
-configure:2473: checking for a thread-safe mkdir -p
-configure:2512: result: /usr/bin/mkdir -p
-configure:2519: checking for gawk
-configure:2535: found /usr/bin/gawk
-configure:2546: result: gawk
-configure:2557: checking whether make sets $(MAKE)
-configure:2579: result: yes
-configure:2608: checking whether make supports nested variables
-configure:2625: result: yes
-configure:2722: checking for style of include used by make
-configure:2750: result: GNU
-configure:2821: checking for gcc
-configure:2848: result: mpicc
-configure:3077: checking for C compiler version
-configure:3086: mpicc --version >&5
+configure:2323: checking for a BSD-compatible install
+configure:2391: result: /usr/bin/install -c
+configure:2402: checking whether build environment is sane
+configure:2457: result: yes
+configure:2608: checking for a thread-safe mkdir -p
+configure:2647: result: /usr/bin/mkdir -p
+configure:2654: checking for gawk
+configure:2670: found /usr/bin/gawk
+configure:2681: result: gawk
+configure:2692: checking whether make sets $(MAKE)
+configure:2714: result: yes
+configure:2743: checking whether make supports nested variables
+configure:2760: result: yes
+configure:2857: checking for style of include used by make
+configure:2885: result: GNU
+configure:2956: checking for gcc
+configure:2983: result: mpicc
+configure:3212: checking for C compiler version
+configure:3221: mpicc --version >&5
 gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-39)
 Copyright (C) 2015 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-configure:3097: $? = 0
-configure:3086: mpicc -v >&5
+configure:3232: $? = 0
+configure:3221: mpicc -v >&5
 Using built-in specs.
 COLLECT_GCC=/usr/bin/gcc
 COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/lto-wrapper
@@ -77,69 +77,71 @@ Target: x86_64-redhat-linux
 Configured with: ../configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-bootstrap --enable-shared --enable-threads=posix --enable-checking=release --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-linker-hash-style=gnu --enable-languages=c,c++,objc,obj-c++,java,fortran,ada,go,lto --enable-plugin --enable-initfini-array --disable-libgcj --with-isl=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/isl-install --with-cloog=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/cloog-install --enable-gnu-indirect-function --with-tune=generic --with-arch_32=x86-64 --build=x86_64-redhat-linux
 Thread model: posix
 gcc version 4.8.5 20150623 (Red Hat 4.8.5-39) (GCC) 
-configure:3097: $? = 0
-configure:3086: mpicc -V >&5
+configure:3232: $? = 0
+configure:3221: mpicc -V >&5
 gcc: error: unrecognized command line option '-V'
 gcc: fatal error: no input files
 compilation terminated.
-configure:3097: $? = 4
-configure:3086: mpicc -qversion >&5
+configure:3232: $? = 4
+configure:3221: mpicc -qversion >&5
 gcc: error: unrecognized command line option '-qversion'
 gcc: fatal error: no input files
 compilation terminated.
-configure:3097: $? = 4
-configure:3117: checking whether the C compiler works
-configure:3139: mpicc    conftest.c  >&5
-configure:3143: $? = 0
-configure:3191: result: yes
-configure:3194: checking for C compiler default output file name
-configure:3196: result: a.out
-configure:3202: checking for suffix of executables
-configure:3209: mpicc -o conftest    conftest.c  >&5
-configure:3213: $? = 0
-configure:3235: result: 
-configure:3257: checking whether we are cross compiling
-configure:3265: mpicc -o conftest    conftest.c  >&5
-configure:3269: $? = 0
-configure:3276: ./conftest
-configure:3280: $? = 0
-configure:3295: result: no
-configure:3300: checking for suffix of object files
-configure:3322: mpicc -c   conftest.c >&5
-configure:3326: $? = 0
-configure:3347: result: o
-configure:3351: checking whether we are using the GNU C compiler
-configure:3370: mpicc -c   conftest.c >&5
-configure:3370: $? = 0
-configure:3379: result: yes
-configure:3388: checking whether mpicc accepts -g
-configure:3408: mpicc -c -g  conftest.c >&5
-configure:3408: $? = 0
-configure:3449: result: yes
-configure:3466: checking for mpicc option to accept ISO C89
-configure:3529: mpicc  -c -g -O2  conftest.c >&5
-configure:3529: $? = 0
-configure:3542: result: none needed
-configure:3564: checking dependency style of mpicc
-configure:3675: result: gcc3
-configure:3740: checking for ar
-configure:3756: found /usr/bin/ar
-configure:3767: result: ar
-configure:3793: checking the archiver (ar) interface
-configure:3803: mpicc -c -g -O2  conftest.c >&5
-configure:3803: $? = 0
-configure:3805: ar cru libconftest.a conftest.o >&5
-configure:3808: $? = 0
-configure:3831: result: ar
-configure:3963: checking for C compiler version
-configure:3972: mpicc --version >&5
+configure:3232: $? = 4
+configure:3252: checking whether the C compiler works
+configure:3274: mpicc    conftest.c  >&5
+configure:3278: $? = 0
+configure:3326: result: yes
+configure:3329: checking for C compiler default output file name
+configure:3331: result: a.out
+configure:3337: checking for suffix of executables
+configure:3344: mpicc -o conftest    conftest.c  >&5
+configure:3348: $? = 0
+configure:3370: result: 
+configure:3392: checking whether we are cross compiling
+configure:3400: mpicc -o conftest    conftest.c  >&5
+configure:3404: $? = 0
+configure:3411: ./conftest
+configure:3415: $? = 0
+configure:3430: result: no
+configure:3435: checking for suffix of object files
+configure:3457: mpicc -c   conftest.c >&5
+configure:3461: $? = 0
+configure:3482: result: o
+configure:3486: checking whether we are using the GNU C compiler
+configure:3505: mpicc -c   conftest.c >&5
+configure:3505: $? = 0
+configure:3514: result: yes
+configure:3523: checking whether mpicc accepts -g
+configure:3543: mpicc -c -g  conftest.c >&5
+configure:3543: $? = 0
+configure:3584: result: yes
+configure:3601: checking for mpicc option to accept ISO C89
+configure:3664: mpicc  -c -g -O2  conftest.c >&5
+configure:3664: $? = 0
+configure:3677: result: none needed
+configure:3699: checking dependency style of mpicc
+configure:3810: result: gcc3
+configure:3875: checking for ar
+configure:3891: found /usr/bin/ar
+configure:3902: result: ar
+configure:3928: checking the archiver (ar) interface
+configure:3938: mpicc -c -g -O2  conftest.c >&5
+configure:3938: $? = 0
+configure:3940: ar cru libconftest.a conftest.o >&5
+configure:3943: $? = 0
+configure:3966: result: ar
+configure:4034: checking for gcc
+configure:4061: result: mpicc
+configure:4290: checking for C compiler version
+configure:4299: mpicc --version >&5
 gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-39)
 Copyright (C) 2015 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-configure:3983: $? = 0
-configure:3972: mpicc -v >&5
+configure:4310: $? = 0
+configure:4299: mpicc -v >&5
 Using built-in specs.
 COLLECT_GCC=/usr/bin/gcc
 COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/lto-wrapper
@@ -147,126 +149,166 @@ Target: x86_64-redhat-linux
 Configured with: ../configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-bootstrap --enable-shared --enable-threads=posix --enable-checking=release --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-linker-hash-style=gnu --enable-languages=c,c++,objc,obj-c++,java,fortran,ada,go,lto --enable-plugin --enable-initfini-array --disable-libgcj --with-isl=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/isl-install --with-cloog=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/cloog-install --enable-gnu-indirect-function --with-tune=generic --with-arch_32=x86-64 --build=x86_64-redhat-linux
 Thread model: posix
 gcc version 4.8.5 20150623 (Red Hat 4.8.5-39) (GCC) 
-configure:3983: $? = 0
-configure:3972: mpicc -V >&5
+configure:4310: $? = 0
+configure:4299: mpicc -V >&5
 gcc: error: unrecognized command line option '-V'
 gcc: fatal error: no input files
 compilation terminated.
-configure:3983: $? = 4
-configure:3972: mpicc -qversion >&5
+configure:4310: $? = 4
+configure:4299: mpicc -qversion >&5
 gcc: error: unrecognized command line option '-qversion'
 gcc: fatal error: no input files
 compilation terminated.
-configure:3983: $? = 4
-configure:3987: checking whether we are using the GNU C compiler
-configure:4015: result: yes
-configure:4024: checking whether mpicc accepts -g
-configure:4085: result: yes
-configure:4102: checking for mpicc option to accept ISO C89
-configure:4178: result: none needed
-configure:4200: checking dependency style of mpicc
-configure:4311: result: gcc3
-configure:4339: checking for mpicc
-configure:4355: found /opt/openmpi/4.0.4/gcc/4.8.2/bin/mpicc
-configure:4366: result: mpicc
-configure:4384: checking for MPI_Init
-configure:4384: mpicc -o conftest -g -O2   conftest.c  >&5
-configure:4384: $? = 0
-configure:4384: result: yes
-configure:4477: checking for mpi.h
-configure:4490: mpicc -c -g -O2  conftest.c >&5
-configure:4490: $? = 0
-configure:4491: result: yes
-configure:4546: checking build system type
-configure:4560: result: x86_64-unknown-linux-gnu
-configure:4580: checking host system type
-configure:4593: result: x86_64-unknown-linux-gnu
-configure:4634: checking how to print strings
-configure:4661: result: printf
-configure:4682: checking for a sed that does not truncate output
-configure:4746: result: /usr/bin/sed
-configure:4764: checking for grep that handles long lines and -e
-configure:4822: result: /usr/bin/grep
-configure:4827: checking for egrep
-configure:4889: result: /usr/bin/grep -E
-configure:4894: checking for fgrep
-configure:4956: result: /usr/bin/grep -F
-configure:4991: checking for ld used by mpicc
-configure:5058: result: /usr/bin/ld
-configure:5065: checking if the linker (/usr/bin/ld) is GNU ld
-configure:5080: result: yes
-configure:5092: checking for BSD- or MS-compatible name lister (nm)
-configure:5141: result: /usr/bin/nm -B
-configure:5271: checking the name lister (/usr/bin/nm -B) interface
-configure:5278: mpicc -c -g -O2  conftest.c >&5
-configure:5281: /usr/bin/nm -B "conftest.o"
-configure:5284: output
+configure:4310: $? = 4
+configure:4314: checking whether we are using the GNU C compiler
+configure:4342: result: yes
+configure:4351: checking whether mpicc accepts -g
+configure:4412: result: yes
+configure:4429: checking for mpicc option to accept ISO C89
+configure:4505: result: none needed
+configure:4527: checking dependency style of mpicc
+configure:4638: result: gcc3
+configure:4711: checking for mpicc
+configure:4727: found /opt/openmpi/4.0.4/gcc/4.8.2/bin/mpicc
+configure:4738: result: mpicc
+configure:4765: checking for C++ compiler version
+configure:4774: mpicc --version >&5
+gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-39)
+Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+configure:4785: $? = 0
+configure:4774: mpicc -v >&5
+Using built-in specs.
+COLLECT_GCC=/usr/bin/gcc
+COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/lto-wrapper
+Target: x86_64-redhat-linux
+Configured with: ../configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-bootstrap --enable-shared --enable-threads=posix --enable-checking=release --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-linker-hash-style=gnu --enable-languages=c,c++,objc,obj-c++,java,fortran,ada,go,lto --enable-plugin --enable-initfini-array --disable-libgcj --with-isl=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/isl-install --with-cloog=/builddir/build/BUILD/gcc-4.8.5-20150702/obj-x86_64-redhat-linux/cloog-install --enable-gnu-indirect-function --with-tune=generic --with-arch_32=x86-64 --build=x86_64-redhat-linux
+Thread model: posix
+gcc version 4.8.5 20150623 (Red Hat 4.8.5-39) (GCC) 
+configure:4785: $? = 0
+configure:4774: mpicc -V >&5
+gcc: error: unrecognized command line option '-V'
+gcc: fatal error: no input files
+compilation terminated.
+configure:4785: $? = 4
+configure:4774: mpicc -qversion >&5
+gcc: error: unrecognized command line option '-qversion'
+gcc: fatal error: no input files
+compilation terminated.
+configure:4785: $? = 4
+configure:4789: checking whether we are using the GNU C++ compiler
+configure:4808: mpicc -c   conftest.cpp >&5
+configure:4808: $? = 0
+configure:4817: result: yes
+configure:4826: checking whether mpicc accepts -g
+configure:4846: mpicc -c -g  conftest.cpp >&5
+configure:4846: $? = 0
+configure:4887: result: yes
+configure:4912: checking dependency style of mpicc
+configure:5023: result: gcc3
+configure:5050: checking for mpicc
+configure:5066: found /opt/openmpi/4.0.4/gcc/4.8.2/bin/mpicc
+configure:5077: result: mpicc
+configure:5095: checking for MPI_Init
+configure:5095: mpicc -o conftest -g -O2   conftest.c  >&5
+configure:5095: $? = 0
+configure:5095: result: yes
+configure:5188: checking for mpi.h
+configure:5201: mpicc -c -g -O2  conftest.c >&5
+configure:5201: $? = 0
+configure:5202: result: yes
+configure:5257: checking build system type
+configure:5271: result: x86_64-unknown-linux-gnu
+configure:5291: checking host system type
+configure:5304: result: x86_64-unknown-linux-gnu
+configure:5345: checking how to print strings
+configure:5372: result: printf
+configure:5393: checking for a sed that does not truncate output
+configure:5457: result: /usr/bin/sed
+configure:5475: checking for grep that handles long lines and -e
+configure:5533: result: /usr/bin/grep
+configure:5538: checking for egrep
+configure:5600: result: /usr/bin/grep -E
+configure:5605: checking for fgrep
+configure:5667: result: /usr/bin/grep -F
+configure:5702: checking for ld used by mpicc
+configure:5769: result: /usr/bin/ld
+configure:5776: checking if the linker (/usr/bin/ld) is GNU ld
+configure:5791: result: yes
+configure:5803: checking for BSD- or MS-compatible name lister (nm)
+configure:5852: result: /usr/bin/nm -B
+configure:5982: checking the name lister (/usr/bin/nm -B) interface
+configure:5989: mpicc -c -g -O2  conftest.c >&5
+configure:5992: /usr/bin/nm -B "conftest.o"
+configure:5995: output
 0000000000000000 B some_variable
-configure:5291: result: BSD nm
-configure:5294: checking whether ln -s works
-configure:5298: result: yes
-configure:5306: checking the maximum length of command line arguments
-configure:5436: result: 3458764513820540925
-configure:5453: checking whether the shell understands some XSI constructs
-configure:5463: result: yes
-configure:5467: checking whether the shell understands "+="
-configure:5473: result: yes
-configure:5508: checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unknown-linux-gnu format
-configure:5548: result: func_convert_file_noop
-configure:5555: checking how to convert x86_64-unknown-linux-gnu file names to toolchain format
-configure:5575: result: func_convert_file_noop
-configure:5582: checking for /usr/bin/ld option to reload object files
-configure:5589: result: -r
-configure:5663: checking for objdump
-configure:5679: found /usr/bin/objdump
-configure:5690: result: objdump
-configure:5722: checking how to recognize dependent libraries
-configure:5924: result: pass_all
-configure:6009: checking for dlltool
-configure:6039: result: no
-configure:6069: checking how to associate runtime and link libraries
-configure:6096: result: printf %s\n
-configure:6220: checking for archiver @FILE support
-configure:6237: mpicc -c -g -O2  conftest.c >&5
-configure:6237: $? = 0
-configure:6240: ar cru libconftest.a @conftest.lst >&5
-configure:6243: $? = 0
-configure:6248: ar cru libconftest.a @conftest.lst >&5
+configure:6002: result: BSD nm
+configure:6005: checking whether ln -s works
+configure:6009: result: yes
+configure:6017: checking the maximum length of command line arguments
+configure:6147: result: 3458764513820540925
+configure:6164: checking whether the shell understands some XSI constructs
+configure:6174: result: yes
+configure:6178: checking whether the shell understands "+="
+configure:6184: result: yes
+configure:6219: checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unknown-linux-gnu format
+configure:6259: result: func_convert_file_noop
+configure:6266: checking how to convert x86_64-unknown-linux-gnu file names to toolchain format
+configure:6286: result: func_convert_file_noop
+configure:6293: checking for /usr/bin/ld option to reload object files
+configure:6300: result: -r
+configure:6374: checking for objdump
+configure:6390: found /usr/bin/objdump
+configure:6401: result: objdump
+configure:6433: checking how to recognize dependent libraries
+configure:6635: result: pass_all
+configure:6720: checking for dlltool
+configure:6750: result: no
+configure:6780: checking how to associate runtime and link libraries
+configure:6807: result: printf %s\n
+configure:6931: checking for archiver @FILE support
+configure:6948: mpicc -c -g -O2  conftest.c >&5
+configure:6948: $? = 0
+configure:6951: ar cru libconftest.a @conftest.lst >&5
+configure:6954: $? = 0
+configure:6959: ar cru libconftest.a @conftest.lst >&5
 ar: conftest.o: No such file or directory
-configure:6251: $? = 1
-configure:6263: result: @
-configure:6321: checking for strip
-configure:6337: found /usr/bin/strip
-configure:6348: result: strip
-configure:6420: checking for ranlib
-configure:6436: found /usr/bin/ranlib
-configure:6447: result: ranlib
-configure:6549: checking command to parse /usr/bin/nm -B output from mpicc object
-configure:6669: mpicc -c -g -O2  conftest.c >&5
-configure:6672: $? = 0
-configure:6676: /usr/bin/nm -B conftest.o \| sed -n -e 's/^.*[ ]\([ABCDGIRSTW][ABCDGIRSTW]*\)[ ][ ]*\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2 \2/p' | sed '/ __gnu_lto/d' \> conftest.nm
-configure:6679: $? = 0
-configure:6745: mpicc -o conftest -g -O2   conftest.c conftstm.o >&5
-configure:6748: $? = 0
-configure:6786: result: ok
-configure:6823: checking for sysroot
-configure:6853: result: no
-configure:6930: mpicc -c -g -O2  conftest.c >&5
-configure:6933: $? = 0
-configure:7109: checking for mt
-configure:7139: result: no
-configure:7159: checking if : is a manifest tool
-configure:7165: : '-?'
-configure:7173: result: no
-configure:7815: checking how to run the C preprocessor
-configure:7846: mpicc -E  conftest.c
-configure:7846: $? = 0
-configure:7860: mpicc -E  conftest.c
+configure:6962: $? = 1
+configure:6974: result: @
+configure:7032: checking for strip
+configure:7048: found /usr/bin/strip
+configure:7059: result: strip
+configure:7131: checking for ranlib
+configure:7147: found /usr/bin/ranlib
+configure:7158: result: ranlib
+configure:7260: checking command to parse /usr/bin/nm -B output from mpicc object
+configure:7380: mpicc -c -g -O2  conftest.c >&5
+configure:7383: $? = 0
+configure:7387: /usr/bin/nm -B conftest.o \| sed -n -e 's/^.*[ ]\([ABCDGIRSTW][ABCDGIRSTW]*\)[ ][ ]*\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2 \2/p' | sed '/ __gnu_lto/d' \> conftest.nm
+configure:7390: $? = 0
+configure:7456: mpicc -o conftest -g -O2   conftest.c conftstm.o >&5
+configure:7459: $? = 0
+configure:7497: result: ok
+configure:7534: checking for sysroot
+configure:7564: result: no
+configure:7641: mpicc -c -g -O2  conftest.c >&5
+configure:7644: $? = 0
+configure:7820: checking for mt
+configure:7850: result: no
+configure:7870: checking if : is a manifest tool
+configure:7876: : '-?'
+configure:7884: result: no
+configure:8526: checking how to run the C preprocessor
+configure:8557: mpicc -E  conftest.c
+configure:8557: $? = 0
+configure:8571: mpicc -E  conftest.c
 conftest.c:12:28: fatal error: ac_nonexistent.h: No such file or directory
  #include <ac_nonexistent.h>
                             ^
 compilation terminated.
-configure:7860: $? = 1
+configure:8571: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "VDIF2psrfits"
@@ -280,15 +322,15 @@ configure: failed program was:
 | #define HAVE_MPI 1
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:7885: result: mpicc -E
-configure:7905: mpicc -E  conftest.c
-configure:7905: $? = 0
-configure:7919: mpicc -E  conftest.c
+configure:8596: result: mpicc -E
+configure:8616: mpicc -E  conftest.c
+configure:8616: $? = 0
+configure:8630: mpicc -E  conftest.c
 conftest.c:12:28: fatal error: ac_nonexistent.h: No such file or directory
  #include <ac_nonexistent.h>
                             ^
 compilation terminated.
-configure:7919: $? = 1
+configure:8630: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "VDIF2psrfits"
@@ -302,123 +344,219 @@ configure: failed program was:
 | #define HAVE_MPI 1
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:7948: checking for ANSI C header files
-configure:7968: mpicc -c -g -O2  conftest.c >&5
-configure:7968: $? = 0
-configure:8041: mpicc -o conftest -g -O2   conftest.c  >&5
-configure:8041: $? = 0
-configure:8041: ./conftest
-configure:8041: $? = 0
-configure:8052: result: yes
-configure:8065: checking for sys/types.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for sys/stat.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for stdlib.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for string.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for memory.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for strings.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for inttypes.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for stdint.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8065: checking for unistd.h
-configure:8065: mpicc -c -g -O2  conftest.c >&5
-configure:8065: $? = 0
-configure:8065: result: yes
-configure:8079: checking for dlfcn.h
-configure:8079: mpicc -c -g -O2  conftest.c >&5
-configure:8079: $? = 0
-configure:8079: result: yes
-configure:8285: checking for objdir
-configure:8300: result: .libs
-configure:8571: checking if mpicc supports -fno-rtti -fno-exceptions
-configure:8589: mpicc -c -g -O2  -fno-rtti -fno-exceptions conftest.c >&5
+configure:8659: checking for ANSI C header files
+configure:8679: mpicc -c -g -O2  conftest.c >&5
+configure:8679: $? = 0
+configure:8752: mpicc -o conftest -g -O2   conftest.c  >&5
+configure:8752: $? = 0
+configure:8752: ./conftest
+configure:8752: $? = 0
+configure:8763: result: yes
+configure:8776: checking for sys/types.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for sys/stat.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for stdlib.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for string.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for memory.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for strings.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for inttypes.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for stdint.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8776: checking for unistd.h
+configure:8776: mpicc -c -g -O2  conftest.c >&5
+configure:8776: $? = 0
+configure:8776: result: yes
+configure:8790: checking for dlfcn.h
+configure:8790: mpicc -c -g -O2  conftest.c >&5
+configure:8790: $? = 0
+configure:8790: result: yes
+configure:9007: checking for objdir
+configure:9022: result: .libs
+configure:9293: checking if mpicc supports -fno-rtti -fno-exceptions
+configure:9311: mpicc -c -g -O2  -fno-rtti -fno-exceptions conftest.c >&5
 cc1: warning: command line option '-fno-rtti' is valid for C++/ObjC++ but not for C [enabled by default]
-configure:8593: $? = 0
-configure:8606: result: no
-configure:8933: checking for mpicc option to produce PIC
-configure:8940: result: -fPIC -DPIC
-configure:8948: checking if mpicc PIC flag -fPIC -DPIC works
-configure:8966: mpicc -c -g -O2  -fPIC -DPIC -DPIC conftest.c >&5
-configure:8970: $? = 0
-configure:8983: result: yes
-configure:9012: checking if mpicc static flag -static works
-configure:9040: result: no
-configure:9055: checking if mpicc supports -c -o file.o
-configure:9076: mpicc -c -g -O2  -o out/conftest2.o conftest.c >&5
-configure:9080: $? = 0
-configure:9102: result: yes
-configure:9110: checking if mpicc supports -c -o file.o
-configure:9157: result: yes
-configure:9190: checking whether the mpicc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
-configure:10343: result: yes
-configure:10380: checking whether -lc should be explicitly linked in
-configure:10388: mpicc -c -g -O2  conftest.c >&5
-configure:10391: $? = 0
-configure:10406: mpicc -shared  -fPIC -DPIC conftest.o  -v -Wl,-soname -Wl,conftest -o conftest 2\>\&1 \| /usr/bin/grep  -lc  \>/dev/null 2\>\&1
-configure:10409: $? = 0
-configure:10423: result: no
-configure:10583: checking dynamic linker characteristics
-configure:11094: mpicc -o conftest -g -O2   -Wl,-rpath -Wl,/foo conftest.c  >&5
-configure:11094: $? = 0
-configure:11320: result: GNU/Linux ld.so
-configure:11427: checking how to hardcode library paths into programs
-configure:11452: result: immediate
-configure:11992: checking whether stripping libraries is possible
-configure:11997: result: yes
-configure:12032: checking if libtool supports shared libraries
-configure:12034: result: yes
-configure:12037: checking whether to build shared libraries
-configure:12058: result: yes
-configure:12061: checking whether to build static libraries
-configure:12065: result: yes
-configure:12103: checking for cos in -lm
-configure:12128: mpicc -o conftest -g -O2   conftest.c -lm   >&5
+configure:9315: $? = 0
+configure:9328: result: no
+configure:9655: checking for mpicc option to produce PIC
+configure:9662: result: -fPIC -DPIC
+configure:9670: checking if mpicc PIC flag -fPIC -DPIC works
+configure:9688: mpicc -c -g -O2  -fPIC -DPIC -DPIC conftest.c >&5
+configure:9692: $? = 0
+configure:9705: result: yes
+configure:9734: checking if mpicc static flag -static works
+configure:9762: result: no
+configure:9777: checking if mpicc supports -c -o file.o
+configure:9798: mpicc -c -g -O2  -o out/conftest2.o conftest.c >&5
+configure:9802: $? = 0
+configure:9824: result: yes
+configure:9832: checking if mpicc supports -c -o file.o
+configure:9879: result: yes
+configure:9912: checking whether the mpicc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
+configure:11065: result: yes
+configure:11102: checking whether -lc should be explicitly linked in
+configure:11110: mpicc -c -g -O2  conftest.c >&5
+configure:11113: $? = 0
+configure:11128: mpicc -shared  -fPIC -DPIC conftest.o  -v -Wl,-soname -Wl,conftest -o conftest 2\>\&1 \| /usr/bin/grep  -lc  \>/dev/null 2\>\&1
+configure:11131: $? = 0
+configure:11145: result: no
+configure:11305: checking dynamic linker characteristics
+configure:11816: mpicc -o conftest -g -O2   -Wl,-rpath -Wl,/foo conftest.c  >&5
+configure:11816: $? = 0
+configure:12042: result: GNU/Linux ld.so
+configure:12149: checking how to hardcode library paths into programs
+configure:12174: result: immediate
+configure:12714: checking whether stripping libraries is possible
+configure:12719: result: yes
+configure:12754: checking if libtool supports shared libraries
+configure:12756: result: yes
+configure:12759: checking whether to build shared libraries
+configure:12780: result: yes
+configure:12783: checking whether to build static libraries
+configure:12787: result: yes
+configure:12810: checking how to run the C++ preprocessor
+configure:12837: mpicc -E  conftest.cpp
+configure:12837: $? = 0
+configure:12851: mpicc -E  conftest.cpp
+conftest.cpp:24:28: fatal error: ac_nonexistent.h: No such file or directory
+ #include <ac_nonexistent.h>
+                            ^
+compilation terminated.
+configure:12851: $? = 1
+configure: failed program was:
+| /* confdefs.h */
+| #define PACKAGE_NAME "VDIF2psrfits"
+| #define PACKAGE_TARNAME "vdif2psrfits"
+| #define PACKAGE_VERSION "1.0"
+| #define PACKAGE_STRING "VDIF2psrfits 1.0"
+| #define PACKAGE_BUGREPORT "kliu@mpifr-bonn.mpg.de"
+| #define PACKAGE_URL ""
+| #define PACKAGE "vdif2psrfits"
+| #define VERSION "1.0"
+| #define HAVE_MPI 1
+| #define STDC_HEADERS 1
+| #define HAVE_SYS_TYPES_H 1
+| #define HAVE_SYS_STAT_H 1
+| #define HAVE_STDLIB_H 1
+| #define HAVE_STRING_H 1
+| #define HAVE_MEMORY_H 1
+| #define HAVE_STRINGS_H 1
+| #define HAVE_INTTYPES_H 1
+| #define HAVE_STDINT_H 1
+| #define HAVE_UNISTD_H 1
+| #define HAVE_DLFCN_H 1
+| #define LT_OBJDIR ".libs/"
+| /* end confdefs.h.  */
+| #include <ac_nonexistent.h>
+configure:12876: result: mpicc -E
+configure:12896: mpicc -E  conftest.cpp
+configure:12896: $? = 0
+configure:12910: mpicc -E  conftest.cpp
+conftest.cpp:24:28: fatal error: ac_nonexistent.h: No such file or directory
+ #include <ac_nonexistent.h>
+                            ^
+compilation terminated.
+configure:12910: $? = 1
+configure: failed program was:
+| /* confdefs.h */
+| #define PACKAGE_NAME "VDIF2psrfits"
+| #define PACKAGE_TARNAME "vdif2psrfits"
+| #define PACKAGE_VERSION "1.0"
+| #define PACKAGE_STRING "VDIF2psrfits 1.0"
+| #define PACKAGE_BUGREPORT "kliu@mpifr-bonn.mpg.de"
+| #define PACKAGE_URL ""
+| #define PACKAGE "vdif2psrfits"
+| #define VERSION "1.0"
+| #define HAVE_MPI 1
+| #define STDC_HEADERS 1
+| #define HAVE_SYS_TYPES_H 1
+| #define HAVE_SYS_STAT_H 1
+| #define HAVE_STDLIB_H 1
+| #define HAVE_STRING_H 1
+| #define HAVE_MEMORY_H 1
+| #define HAVE_STRINGS_H 1
+| #define HAVE_INTTYPES_H 1
+| #define HAVE_STDINT_H 1
+| #define HAVE_UNISTD_H 1
+| #define HAVE_DLFCN_H 1
+| #define LT_OBJDIR ".libs/"
+| /* end confdefs.h.  */
+| #include <ac_nonexistent.h>
+configure:13079: checking for ld used by mpicc
+configure:13146: result: /usr/bin/ld -m elf_x86_64
+configure:13153: checking if the linker (/usr/bin/ld -m elf_x86_64) is GNU ld
+configure:13168: result: yes
+configure:13223: checking whether the mpicc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
+configure:14228: result: yes
+configure:14264: mpicc -c -g -O2  conftest.cpp >&5
+configure:14267: $? = 0
+configure:14787: checking for mpicc option to produce PIC
+configure:14794: result: -fPIC -DPIC
+configure:14802: checking if mpicc PIC flag -fPIC -DPIC works
+configure:14820: mpicc -c -g -O2  -fPIC -DPIC -DPIC conftest.cpp >&5
+configure:14824: $? = 0
+configure:14837: result: yes
+configure:14860: checking if mpicc static flag -static works
+configure:14888: result: no
+configure:14900: checking if mpicc supports -c -o file.o
+configure:14921: mpicc -c -g -O2  -o out/conftest2.o conftest.cpp >&5
+configure:14925: $? = 0
+configure:14947: result: yes
+configure:14952: checking if mpicc supports -c -o file.o
+configure:14999: result: yes
+configure:15029: checking whether the mpicc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
+configure:15065: result: yes
+configure:15206: checking dynamic linker characteristics
+configure:15877: result: GNU/Linux ld.so
+configure:15930: checking how to hardcode library paths into programs
+configure:15955: result: immediate
+configure:16017: checking for cos in -lm
+configure:16042: mpicc -o conftest -g -O2   conftest.c -lm   >&5
 conftest.c:31:6: warning: conflicting types for built-in function 'cos' [enabled by default]
  char cos ();
       ^
-configure:12128: $? = 0
-configure:12137: result: yes
-configure:12213: checking for single-precision FFTW-3 library
-configure:12262: mpicc -c -I. -g -O2  conftest.c >&5
-configure:12262: $? = 0
-configure:12344: mpicc -o conftest  -g -O2   conftest.c -L. -lfftw3f -lm  >&5
-configure:12344: $? = 0
-configure:12371: result: yes
-configure:12397: checking for libraries containing socket functions
-configure:12425: mpicc -o conftest -g -O2   conftest.c -lm  >&5
-configure:12425: $? = 0
-configure:12500: result: -lc
-configure:12580: checking for CFITSIO installation
-configure:12629: mpicc -c -I/home/kliu/Soft/include/ -g -O2  conftest.c >&5
-configure:12629: $? = 0
-configure:12710: mpicc -o conftest -I/home/kliu/Soft/include/ -g -O2   conftest.c -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lm  >&5
-configure:12710: $? = 0
-configure:12734: result: yes
-configure:12877: checking that generated files are newer than configure
-configure:12883: result: done
-configure:12918: creating ./config.status
+configure:16042: $? = 0
+configure:16051: result: yes
+configure:16127: checking for single-precision FFTW-3 library
+configure:16176: mpicc -c -I. -g -O2  conftest.c >&5
+configure:16176: $? = 0
+configure:16258: mpicc -o conftest  -g -O2   conftest.c -L. -lfftw3f -lm  >&5
+configure:16258: $? = 0
+configure:16285: result: yes
+configure:16311: checking for libraries containing socket functions
+configure:16339: mpicc -o conftest -g -O2   conftest.c -lm  >&5
+configure:16339: $? = 0
+configure:16414: result: -lc
+configure:16494: checking for CFITSIO installation
+configure:16543: mpicc -c -I/home/kliu/Soft/include/ -g -O2  conftest.c >&5
+configure:16543: $? = 0
+configure:16624: mpicc -o conftest -I/home/kliu/Soft/include/ -g -O2   conftest.c -L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm  -lm  >&5
+configure:16624: $? = 0
+configure:16648: result: yes
+configure:16791: checking that generated files are newer than configure
+configure:16797: result: done
+configure:16836: creating ./config.status
 
 ## ---------------------- ##
 ## Running config.status. ##
@@ -435,11 +573,10 @@ generated by GNU Autoconf 2.69.  Invocation command line was
 
 on frontend
 
-config.status:1095: creating Makefile
-config.status:1095: creating config.h
-config.status:1276: config.h is unchanged
-config.status:1324: executing depfiles commands
-config.status:1324: executing libtool commands
+config.status:1158: creating Makefile
+config.status:1158: creating config.h
+config.status:1387: executing depfiles commands
+config.status:1387: executing libtool commands
 
 ## ---------------- ##
 ## Cache variables. ##
@@ -447,6 +584,9 @@ config.status:1324: executing libtool commands
 
 ac_cv_build=x86_64-unknown-linux-gnu
 ac_cv_c_compiler_gnu=yes
+ac_cv_cxx_compiler_gnu=yes
+ac_cv_env_CCC_set=
+ac_cv_env_CCC_value=
 ac_cv_env_CC_set=set
 ac_cv_env_CC_value=mpicc
 ac_cv_env_CFLAGS_set=
@@ -455,6 +595,12 @@ ac_cv_env_CPPFLAGS_set=
 ac_cv_env_CPPFLAGS_value=
 ac_cv_env_CPP_set=
 ac_cv_env_CPP_value=
+ac_cv_env_CXXCPP_set=
+ac_cv_env_CXXCPP_value=
+ac_cv_env_CXXFLAGS_set=
+ac_cv_env_CXXFLAGS_value=
+ac_cv_env_CXX_set=
+ac_cv_env_CXX_value=
 ac_cv_env_LDFLAGS_set=
 ac_cv_env_LDFLAGS_value=
 ac_cv_env_LIBS_set=
@@ -490,17 +636,21 @@ ac_cv_path_install='/usr/bin/install -c'
 ac_cv_path_mkdir=/usr/bin/mkdir
 ac_cv_prog_AWK=gawk
 ac_cv_prog_CPP='mpicc -E'
+ac_cv_prog_CXXCPP='mpicc -E'
 ac_cv_prog_MPICC=mpicc
 ac_cv_prog_ac_ct_AR=ar
 ac_cv_prog_ac_ct_CC=mpicc
+ac_cv_prog_ac_ct_CXX=mpicc
 ac_cv_prog_ac_ct_OBJDUMP=objdump
 ac_cv_prog_ac_ct_RANLIB=ranlib
 ac_cv_prog_ac_ct_STRIP=strip
 ac_cv_prog_cc_c89=
 ac_cv_prog_cc_g=yes
+ac_cv_prog_cxx_g=yes
 ac_cv_prog_make_make_set=yes
 ac_cv_socket_libs=-lc
 am_cv_CC_dependencies_compiler_type=gcc3
+am_cv_CXX_dependencies_compiler_type=gcc3
 am_cv_ar_interface=ar
 am_cv_make_support_nested_variables=yes
 lt_cv_ar_at_file=@
@@ -512,14 +662,20 @@ lt_cv_ld_reload_flag=-r
 lt_cv_nm_interface='BSD nm'
 lt_cv_objdir=.libs
 lt_cv_path_LD=/usr/bin/ld
+lt_cv_path_LDCXX='/usr/bin/ld -m elf_x86_64'
 lt_cv_path_NM='/usr/bin/nm -B'
 lt_cv_path_mainfest_tool=no
 lt_cv_prog_compiler_c_o=yes
+lt_cv_prog_compiler_c_o_CXX=yes
 lt_cv_prog_compiler_pic='-fPIC -DPIC'
+lt_cv_prog_compiler_pic_CXX='-fPIC -DPIC'
 lt_cv_prog_compiler_pic_works=yes
+lt_cv_prog_compiler_pic_works_CXX=yes
 lt_cv_prog_compiler_rtti_exceptions=no
 lt_cv_prog_compiler_static_works=no
+lt_cv_prog_compiler_static_works_CXX=no
 lt_cv_prog_gnu_ld=yes
+lt_cv_prog_gnu_ldcxx=yes
 lt_cv_sharedlib_from_linklib_cmd='printf %s\n'
 lt_cv_shlibpath_overrides_runpath=yes
 lt_cv_sys_global_symbol_pipe='sed -n -e '\''s/^.*[	 ]\([ABCDGIRSTW][ABCDGIRSTW]*\)[	 ][	 ]*\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2 \2/p'\'' | sed '\''/ __gnu_lto/d'\'''
@@ -538,7 +694,7 @@ swin_cv_fftw3_include_dir=
 ## Output variables. ##
 ## ----------------- ##
 
-ACLOCAL='${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing aclocal-1.13'
+ACLOCAL='${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing aclocal-1.13'
 AMDEPBACKSLASH='\'
 AMDEP_FALSE='#'
 AMDEP_TRUE=''
@@ -548,9 +704,9 @@ AM_DEFAULT_V='$(AM_DEFAULT_VERBOSITY)'
 AM_DEFAULT_VERBOSITY='1'
 AM_V='$(V)'
 AR='ar'
-AUTOCONF='${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing autoconf'
-AUTOHEADER='${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing autoheader'
-AUTOMAKE='${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing automake-1.13'
+AUTOCONF='${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing autoconf'
+AUTOHEADER='${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing autoheader'
+AUTOMAKE='${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing automake-1.13'
 AWK='gawk'
 CC='mpicc'
 CCDEPMODE='depmode=gcc3'
@@ -559,6 +715,10 @@ CFITSIO_LIBS='-L/home/kliu/Soft/lib/ -lcfitsio -lpthread -lm '
 CFLAGS='-g -O2'
 CPP='mpicc -E'
 CPPFLAGS=''
+CXX='mpicc'
+CXXCPP='mpicc -E'
+CXXDEPMODE='depmode=gcc3'
+CXXFLAGS='-g -O2'
 CYGPATH_W='echo'
 DEFS='-DHAVE_CONFIG_H'
 DEPDIR='.deps'
@@ -590,7 +750,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 LIPO=''
 LN_S='ln -s'
 LTLIBOBJS=''
-MAKEINFO='${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/missing makeinfo'
+MAKEINFO='${SHELL} /home/kliu/Soft/vdif2psrfits/config/missing makeinfo'
 MANIFEST_TOOL=':'
 MKDIR_P='/usr/bin/mkdir -p'
 MPICC='mpicc'
@@ -618,11 +778,14 @@ STRIP='strip'
 VERSION='1.0'
 ac_ct_AR='ar'
 ac_ct_CC='mpicc'
+ac_ct_CXX='mpicc'
 ac_ct_DUMPBIN=''
 am__EXEEXT_FALSE=''
 am__EXEEXT_TRUE='#'
 am__fastdepCC_FALSE='#'
 am__fastdepCC_TRUE=''
+am__fastdepCXX_FALSE='#'
+am__fastdepCXX_TRUE=''
 am__include='include'
 am__isrc=''
 am__leading_dot='.'
@@ -649,7 +812,7 @@ host_vendor='unknown'
 htmldir='${docdir}'
 includedir='${prefix}/include'
 infodir='${datarootdir}/info'
-install_sh='${SHELL} /home/kliu/Soft/MPIvdif2psrfits/config/install-sh'
+install_sh='${SHELL} /home/kliu/Soft/vdif2psrfits/config/install-sh'
 libdir='${exec_prefix}/lib'
 libexecdir='${exec_prefix}/libexec'
 localedir='${datarootdir}/locale'

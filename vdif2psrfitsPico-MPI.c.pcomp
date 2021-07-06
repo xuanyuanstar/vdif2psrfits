@@ -160,14 +160,9 @@ int main(int argc, char *argv[])
 	  strcpy(srcname,optarg);
 	  break;
 		  
-	case 'D':
+        case 'D':
 	  strcpy(&dstat,optarg);
-	  if(dstat=='C' || dstat=='S')
-	    npol=4;
-	  else if(dstat=='P')
-	    npol=2;
-	  else
-	    npol=1;
+	  if(dstat!='C') npol=1;
 	  break;
 		  
 	case 'O':
@@ -532,8 +527,7 @@ int main(int argc, char *argv[])
 		  nskip=0;
 
 		  // Get real frame header while dealing with non-integer gaps in between frames 
-		  for(;;) 
-		    {
+		  for(;;) {
 		    // Not enough data in chunk to fill header
 		    if(index[j] + VDIF_HEADER_BYTES > chunksize[j])
 		      {
@@ -566,7 +560,7 @@ int main(int argc, char *argv[])
 			index[j]++;
 			nskip++;
 		      }
-		    }
+		  }
 
 		  if(pend[j])
 		    break;
@@ -626,7 +620,95 @@ int main(int argc, char *argv[])
 		{
 		  // Valid frame
 		  if(!getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[0],VDIF_HEADER_BYTES+fbytes,ifverbose) && !getVDIFFrameInvalid_robust((const vdif_header *)vfhdr[1],VDIF_HEADER_BYTES+fbytes, ifverbose))
+
+		    {
+		      MPI_Init(NULL, NULL);
+
+		      int world_size;
+
+		      MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+		      int world_rank;
+		      MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+		      // Calculate nbytes for each process
+		      if(world_rank == 0)
+			{
+			  nbytes = fbytes/world_size;
+			  leftbytes = fbytes - nbytes*world_size;
+			  displs = (int *)malloc(world_size*sizeof(int));
+			  sendct = (int *)malloc(world_size*sizeof(int));
+
+			  for(MPIi = 0; MPIi < world_size; MPIi++)
+			    {
+			      if(MPIi<leftbytes)
+				{
+				  sendct[MPIi] = nbytes + 1;
+				  displs[MPIi] = (nbytes + 1) * MPIi;
+				}
+			      else
+				{
+				  sendct[MPIi] = nbytes;
+				  displs[MPIi] = (nbytes + 1) * leftbytes + nbytes * (MPIi - leftbytes + 1);
+				}
+			    }
+			}
+
+		      // Create buff for receiving
+		      unsigned char *recvbuff[0] = malloc(sizeof(unsigned char) * sendct[world_rank]);
+		      unsigned char *recvbuff[1] = malloc(sizeof(unsigned char) * sendct[world_rank]);
+
+		      // Scatter p0, p1 data
+		      MPI_Scatterv(buffer[0], sendct, displs, MPI_CHAR, recvbuff[0], sendct[world_rank], MPI_CHAR, 0, MPI_COMM_WORLD);
+		      MPI_Scatterv(buffer[1], sendct, displs, MPI_CHAR, recvbuff[1], sendct[world_rank], MPI_CHAR, 0, MPI_COMM_WORLD);
+
+		      unsigned char *buff8[2];
+		      buff8[0] = (unsigned char*)malloc(sizeof(unsigned char) * sendct[world_rank] * 4);
+		      buff8[1] = (unsigned char*)malloc(sizeof(unsigned char) * sendct[world_rank] * 4);
+
+		      // 2to8 conversion
+		      for(MPIi=0; MPIi<sendct[world_rank]; MPIi++)
+			{
+			  buff8[0][4*sendct[world_rank]] = (recvbuff[0][MPIi] & 192) >> 0x6 ;
+			  buff8[1][4*sendct[world_rank]] = (recvbuff[1][MPIi] & 192) >> 0x6 ;
+			  buff8[0][4*sendct[world_rank]+1] = (recvbuff[0][MPIi] & 48) >> 0x4 ;
+			  buff8[1][4*sendct[world_rank]+1] = (recvbuff[1][MPIi] & 48) >> 0x4 ;
+			  buff8[0][4*sendct[world_rank]+2] = (recvbuff[0][MPIi] & 12) >> 0x2 ;
+			  buff8[1][4*sendct[world_rank]+2] = (recvbuff[1][MPIi] & 12) >> 0x2 ;
+			  buff8[0][4*sendct[world_rank]+3] = (recvbuff[0][MPIi] & 3) >> 0x0 ;
+			  buff8[1][4*sendct[world_rank]+3] = (recvbuff[1][MPIi] & 3) >> 0x0 ;
+			}
+
+		      // Gather p0, p1 timeseries
+		      if(world_rank == 0)
+			{
+			  buff8all[0] = (unsigned char*)malloc(sizeof(unsigned char) * fbytes * 4);
+			  buff8all[1] = (unsigned char*)malloc(sizeof(unsigned char) * fbytes * 4);
+			  for(MPIi = 0; MPIi < world_size; MPIi++)
+			    {
+			      sendct[MPIi] * = 4;
+			      displs[MPIi] * = 4;
+			    }
+			}
+		      MPI_Gatherv(buff8[0], sendct[world_rank], MPI_CHAR, buff8all[0], sendct, displs, MPI_CHAR);
+		      MPI_Gatherv(buff8[0], sendct[world_rank], MPI_CHAR, buff8all[0], sendct, displs, MPI_CHAR);
+
+		      // OpenMPI FFTW to p0, p1
+
+		      // Scatter p0, p1 spectrum
+
+		      // Make detections
+
+		      // Gather detections
+
+
+		      MPI_Finalize();
+
+		    }
 		    getVDIFFrameDetection_1chan(buffer[0],buffer[1],fbytes,det,nchan,dstat,in_p0,in_p1,out_p0,out_p1,pl0,pl1);
+
+
+
 		  // Invalid frame
 		  else
 		    {
