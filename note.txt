@@ -1,1 +1,0 @@
-time mpirun --hostfile host_file ./vdif2psrfitsPicoMPI -f 227068.75 -i /mark6-09_fuse/12/e17c07_Lm_097-0625.vdif -j /mark6-09_fuse/34/e17c07_Lm_097-0625.vdif -T LMT -b 1 -s 0.1 -S SgrA -r 17:45:40 -c -29:00:28 -t 1 -n 16 -O /data/pulsar/kliu/test/ -D S
