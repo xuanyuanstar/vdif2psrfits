@@ -2,6 +2,7 @@
 #include "ran.c"
 #include <malloc.h>
 #include <complex.h>
+#include <stdbool.h>
 #include <fftw3.h>
 #include "vdifio.h"
 
@@ -25,10 +26,10 @@ void getDetection(float p0r, float p0i, float p1r, float p1i, float *det, char d
 	det[0]=p1r*p1r+p1i*p1i;
   else if (dstat == 'S')
 	{
-      det[0]=(p0r*p0r+p0i*p0i)+(p1r*p1r+p1i*p1i);
+	  det[0]=(p0r*p0r+p0i*p0i)+(p1r*p1r+p1i*p1i);
 	  det[1]=(p0r*p0r+p0i*p0i)-(p1r*p1r+p1i*p1i);
 	  det[2]=2.0*(p0r*p1r+p0i*p1i);
-	  det[3]=2.0*(p0r*p1i-p0i*p1r);
+	  det[3]=2.0*(p0r*p1i-p0i*p1r); // PSR/IEEE convention in Stokes V
 	}
   else if (dstat == 'P')
 	{
@@ -58,6 +59,17 @@ void getVDIFFrameDetection_32chan(const unsigned char *src_p0, const unsigned ch
 
   //Extend from 2-bit to 8-bit
   convert2to8(buff8[0], src_p0, fbytes);
+  //for(i=0;i<fbytes;i++)
+  //{
+  //  buff8[0][4*fbytes] = (src_p0[i] & 192) >> 0x6 ;
+  //  buff8[1][4*fbytes] = (src_p1[i] & 192) >> 0x6 ;
+  ///  buff8[0][4*fbytes+1] = (src_p0[i] & 48) >> 0x4 ;
+  // buff8[1][4*fbytes+1] = (src_p1[i] & 48) >> 0x4 ;
+  //  buff8[0][4*fbytes+2] = (src_p0[i] & 12) >> 0x2 ;
+  //  buff8[1][4*fbytes+2] = (src_p1[i] & 12) >> 0x2 ;
+  //  buff8[0][4*fbytes+3] = (src_p0[i] & 3) >> 0x0 ;
+  //  buff8[1][4*fbytes+3] = (src_p1[i] & 3) >> 0x0 ;
+  //}
   convert2to8(buff8[1], src_p1, fbytes);
 
   //Number of time samples
@@ -68,7 +80,7 @@ void getVDIFFrameDetection_32chan(const unsigned char *src_p0, const unsigned ch
 	for(j=0;j<4;j++)
 	  det[k][j]=0.0;
   for(j=0;j<4;j++)
-	dets[j]=0.0;
+    dets[j]=0.0;
   
   //Detect each channel
   for(k=0;k<Nchan;k++)
@@ -78,34 +90,29 @@ void getVDIFFrameDetection_32chan(const unsigned char *src_p0, const unsigned ch
 	{
 	  if(k<Nchan/2)
 	    {
-	      //in[j][i]=(float)((int)buff8[j][i*Nchan+15-k]);
+	      //in_p0[i]=1.0;in_p1[i]=1.0;
 	      in_p0[i]=(float)((int)buff8[0][i*Nchan+15-k])-mean2bspl;
 	      in_p1[i]=(float)((int)buff8[1][i*Nchan+15-k])-mean2bspl;
 	    }
 	  else
 	    {
-	      //in[j][i]=(float)((int)buff8[j][i*Nchan+15+Nchan-k]);
+	      //in_p0[i]=1.0;in_p1[i]=1.0;
 	      in_p0[i]=(float)((int)buff8[0][i*Nchan+15+Nchan-k])-mean2bspl;
 	      in_p1[i]=(float)((int)buff8[1][i*Nchan+15+Nchan-k])-mean2bspl;
 	    }
 	}
+
+      // Launch FFT
       fftwf_execute(pl0);
       fftwf_execute(pl1);
 
       // Make detection for each FFT channel and sum up
-      for(i=1;i<Nts/2;i++)
+      for(i=0;i<=Nts/2;i++)
 	{
 	  getDetection(creal(out_p0[i]),cimag(out_p0[i]),creal(out_p1[i]),cimag(out_p1[i]),dets,dstat);
 	  for(j=0;j<npol;j++)
 	    det[k][j]+=dets[j];
 	}
-      // Add DC and Nyquist power
-      getDetection(creal(out_p0[0]),cimag(out_p0[0]),creal(out_p1[0]),cimag(out_p1[0]),dets,dstat);
-      for(j=0;j<npol;j++)
-	det[k][j]+=dets[j]/2;
-      getDetection(creal(out_p0[Nts/2]),cimag(out_p0[Nts/2]),creal(out_p1[Nts/2]),cimag(out_p1[Nts/2]),dets,dstat);
-      for(j=0;j<npol;j++)
-	det[k][j]+=dets[j]/2;
     }
 
   //Free up memo
@@ -132,17 +139,17 @@ void getVDIFFrameFakeDetection_32chan(double mean_scan[][32], double rms_scan[][
   else
 	npol=1;
 
-  //Number of time samples
+  // Number of time samples
   Nts=fbytes*4/Nchan;
   
-  //Memo for FFT for two pols
+  // Memo for FFT for two pols
   in = (float **)malloc(sizeof(float *)*2);
   for(i=0;i<2;i++)
 	in[i]= (float *)malloc(sizeof(float)*Nts);
   out_p0 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
   out_p1 = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex)*(Nts/2+1));
 
-  //Initialize
+  // Initialize
   for(k=0;k<Nchan;k++)
 	for(j=0;j<4;j++)
 	  det[k][j]=0.0;
@@ -150,13 +157,13 @@ void getVDIFFrameFakeDetection_32chan(double mean_scan[][32], double rms_scan[][
   for(j=0;j<4;j++)
 	dets[j]=0.0;
 
-  //Detect each channel
+  // Detect each channel
   for(k=0;k<Nchan;k++)
 	{
-	  //Operate each pol
+	  // Operate each pol
 	  for(j=0;j<2;j++)
 		{
-		  //Generate time series with given mean & rms
+		  // Generate time series with given mean & rms
 		  for(i=0;i<Nts;i++)
 			in[j][i]=mean_scan[j][k]-mean2bspl;
 		}
@@ -304,7 +311,7 @@ void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned cha
   fftwf_execute(pl0);
   fftwf_execute(pl1);
 
-  //Make detection for each FFT channel and sum up to given nchan
+  // Make detection for each FFT channel and sum up to given nchan
   for(i=1;i<=Nts/2;i++)
     {
       getDetection(creal(out_p0[i]),cimag(out_p0[i]),creal(out_p1[i]),cimag(out_p1[i]),dets,dstat);
@@ -322,17 +329,19 @@ void getVDIFFrameDetection_1chan(const unsigned char *src_p0, const unsigned cha
     free(buff8[i]);
 }
 
-int getVDIFFrameInvalid_robust(const vdif_header *header, int framebytes)
+int getVDIFFrameInvalid_robust(const vdif_header *header, int framebytes, bool ifverbose)
 {
-  int f, mjd,sec,num;
+  int f, mjd,sec,num,inval;
   f=getVDIFFrameBytes(header);
   mjd=getVDIFFrameMJD(header);
   sec=getVDIFFrameSecond(header);
   num=getVDIFFrameNumber(header);
-  
-  if(f != framebytes || getVDIFFrameInvalid(header) || mjd < 50000 || mjd > 60000 || sec < 0 || num < 0 || num > 125000)
+  inval=getVDIFFrameInvalid(header);
+ 
+  if(f != framebytes || inval || mjd < 50000 || mjd > 60000 || sec < 0 || num < 0 || num > 125000)
     {
-      fprintf(stderr,"Invalid frame: bytes %i mjd %i sec %i num %i\n",f,mjd,sec,num);
+      if (ifverbose)
+	fprintf(stderr,"Invalid frame: bytes %i mjd %i sec %i num %i inval %i\n",f,mjd,sec,num,inval);
       return 1;
     }
   else
